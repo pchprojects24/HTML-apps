@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tactical Medical Mastery</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --good-bg: #dcfce7;
+      --good-border: #16a34a;
+      --bad-bg: #fee2e2;
+      --bad-border: #dc2626;
+      --soft: #e2e8f0;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 220px);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero, .panel, .summary-card {
+      background: var(--card);
+      border: 1px solid var(--soft);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 24px;
+      margin-top: 10px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 2rem; line-height: 1.15; }
+    h2 { font-size: 1.4rem; }
+
+    p.sub {
+      margin-top: 10px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .grid-btns {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .card-btn, .option-btn, .primary-btn, .ghost-btn {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s ease;
+    }
+
+    .card-btn:active, .option-btn:active, .primary-btn:active, .ghost-btn:active {
+      transform: scale(0.98);
+    }
+
+    .card-btn:hover, .option-btn:hover:not(:disabled), .ghost-btn:hover {
+      border-color: var(--primary);
+      background: #f0f7ff;
+    }
+
+    .btn-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .btn-sub {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .topic-stats {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #dbeafe;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .pill.warn {
+      border-color: #fde68a;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .pill.soft {
+      border-color: #e2e8f0;
+      background: #f8fafc;
+      color: #334155;
+    }
+
+    .panel {
+      padding: 18px;
+      margin-top: 12px;
+    }
+
+    .quiz-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .left-top, .right-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .ghost-btn {
+      width: auto;
+      padding: 10px 12px;
+      border-width: 1px;
+      font-weight: 600;
+    }
+
+    .ghost-btn.active-flag {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .streak {
+      white-space: nowrap;
+      font-weight: 700;
+      color: #b45309;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+    }
+
+    .progress {
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2563eb, #60a5fa);
+      transition: width 0.3s ease;
+    }
+
+    .question-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .question-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .options {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .option-btn {
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .option-btn.correct {
+      background: var(--good-bg);
+      border-color: var(--good-border);
+    }
+
+    .option-btn.incorrect {
+      background: var(--bad-bg);
+      border-color: var(--bad-border);
+    }
+
+    .option-btn.dim {
+      opacity: 0.5;
+      background: #f8fafc;
+    }
+
+    .explanation {
+      display: none;
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 18px;
+      border: 2px solid var(--soft);
+      background: #fff;
+    }
+
+    .explanation.show { display: block; animation: fadeIn 0.4s ease; }
+
+    .exp-block {
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .exp-wrong { background: #fef2f2; border-left: 4px solid #ef4444; color: #7f1d1d; }
+    .exp-right { background: #f0fdf4; border-left: 4px solid #22c55e; color: #14532d; }
+    .exp-doctrine { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e3a8a; }
+
+    .explanation h3 {
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+    }
+
+    .label {
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+      opacity: 0.8;
+    }
+
+    .primary-btn {
+      margin-top: 16px;
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .primary-btn:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+    .summary-card {
+      padding: 24px;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    .score-big {
+      font-size: 3rem;
+      font-weight: 900;
+      margin: 8px 0 4px;
+    }
+
+    .score-sub {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .note {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    .summary-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+      text-align: left;
+    }
+
+    .summary-stat {
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+    }
+
+    .summary-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .summary-actions.two-col {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .footer-space { height: 14px; }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 1.6rem; }
+      .hero, .panel, .summary-card { border-radius: 20px; }
+      .question-text { font-size: 1rem; }
+      .score-big { font-size: 2.5rem; }
+      .quiz-top { align-items: flex-start; }
+      .option-btn { font-size: 0.95rem; padding: 14px; }
+      .right-top { flex-wrap: wrap; justify-content: flex-end; }
+      .summary-actions.two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Home Screen -->
+    <section id="homeScreen" class="screen active">
+      <div class="hero">
+        <h1>Tactical Medical Mastery</h1>
+        <p class="sub">Advanced multiple-choice review tailored for Canadian Armed Forces Health Services, TCCC, and Prolonged Field Care protocols.</p>
+        <div class="grid-btns">
+          <button class="card-btn" onclick="selectLevel('beginner')">
+            <div class="btn-title">Beginner Phase</div>
+            <div class="btn-sub">Fundamentals, Protocols & Basic TCCC</div>
+          </button>
+          <button class="card-btn" onclick="selectLevel('intermediate')">
+            <div class="btn-title">Intermediate Phase</div>
+            <div class="btn-sub">Application, Meds & Interventions</div>
+          </button>
+          <button class="card-btn" onclick="selectLevel('advanced')">
+            <div class="btn-title">Advanced Phase</div>
+            <div class="btn-sub">Complex PFC & Critical Care</div>
+          </button>
+          <button class="card-btn" style="border-color: #94a3b8; background: #f8fafc;" onclick="selectLevel('naval')">
+            <div class="btn-title" style="color: #0f172a;">Naval & Remote Operations</div>
+            <div class="btn-sub">Shipboard Care, Casualty Clearers & RCN Environment</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category Screen -->
+    <section id="categoryScreen" class="screen">
+      <div class="hero">
+        <button class="ghost-btn" style="margin-bottom: 12px;" onclick="goHome()">← Back to Phases</button>
+        <h1 id="selectedLevelTitle">Phase</h1>
+        <p class="sub">Choose a topic to begin the assessment.</p>
+        <div id="categoryGrid" class="grid-btns">
+          <!-- Categories injected here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Quiz Screen -->
+    <section id="quizScreen" class="screen">
+      <div class="panel">
+        <div class="quiz-top">
+          <div class="left-top">
+            <button class="ghost-btn" onclick="goBackToCategories()">Back</button>
+            <div class="meta">
+              <div id="quizPathLabel" style="font-weight: 700; color: #0f172a;">Path</div>
+              <div id="questionMeta">Question 1 of X</div>
+            </div>
+          </div>
+          <div class="right-top">
+            <button id="flagBtn" class="ghost-btn" onclick="toggleFlagCurrent()">☆ Flag</button>
+            <div class="streak">🔥 <span id="streakValue">0</span></div>
+          </div>
+        </div>
+
+        <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+
+        <div class="question-box">
+          <div id="questionText" class="question-text"></div>
+          <div id="optionsWrap" class="options"></div>
+
+          <!-- Detailed Explanation Box -->
+          <div id="explanationBox" class="explanation">
+            <h3 id="explanationTitle"></h3>
+
+            <div id="wrongExpBlock" class="exp-block exp-wrong" style="display:none;">
+              <span class="label">Why your choice was incorrect:</span>
+              <span id="wrongText"></span>
+            </div>
+
+            <div id="rightExpBlock" class="exp-block exp-right" style="display:none;">
+              <span class="label" id="rightLabel">Correct Answer Analysis:</span>
+              <span id="rightText"></span>
+            </div>
+
+            <div id="doctrineBlock" class="exp-block exp-doctrine" style="display:none;">
+              <span class="label">Key Doctrine / Takeaway:</span>
+              <span id="keyText"></span>
+            </div>
+
+            <button id="nextBtn" class="primary-btn" onclick="nextQuestion()">Next Question</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary Screen -->
+    <section id="summaryScreen" class="screen">
+      <div class="summary-card">
+        <h2>Topic Complete</h2>
+        <div id="summaryFeedback" class="note" style="margin-top:16px;"></div>
+        <div id="summaryPercent" class="score-big">0%</div>
+        <div id="summaryCount" class="score-sub">0 / 0 Correct</div>
+
+        <div class="summary-grid">
+          <div id="masterySummary" class="summary-stat"></div>
+          <div id="reviewSummary" class="summary-stat"></div>
+        </div>
+
+        <div class="summary-actions two-col">
+          <button id="retryIncorrectBtn" class="primary-btn" style="margin-top:0;" onclick="startReviewMode('incorrect')">Retry Incorrect</button>
+          <button id="retryFlaggedBtn" class="ghost-btn" style="width:100%;" onclick="startReviewMode('flagged')">Review Flagged</button>
+        </div>
+
+        <div class="summary-actions two-col">
+          <button class="primary-btn" style="margin-top:0;" onclick="goBackToCategories()">Choose New Topic</button>
+          <button class="ghost-btn" style="width:100%;" onclick="goHome()">Main Menu</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-space"></div>
+  </div>
+
+  <script>
+    const topics = [
+      { id: "doctrine", title: "Doctrine, Operational Medicine, and Readiness", sub: "Roles of medical care, MHS structures, deployment cycles" },
+      { id: "behavioral", title: "Behavioral Health, Psychiatric Care, and Resilience", sub: "ACTT programs, PTSD therapies, combative patient" },
+      { id: "airway", title: "Airway and Breathing Management", sub: "Surgical airways, chest tube, needle decompression" },
+      { id: "circulation", title: "Circulation, Hemorrhage Control, and Shock Resuscitation", sub: "Tourniquets, EZ-IO, pericardiocentesis, fluid resuscitation" },
+      { id: "clinical", title: "General Clinical Skills and Diagnostics", sub: "Foley catheter, lab values, basic technician skills" },
+      { id: "analgesia", title: "Analgesia and Procedural Sedation", sub: "PFC pain management, sedation directives, medication monographs" },
+      { id: "pharmacology", title: "General Pharmacology and Therapeutics", sub: "Non-analgesic administration, vasopressors, fibrinolytics, empiric abx" },
+      { id: "environmental", title: "Environmental and Thermal Injuries", sub: "Burn wound management and hypothermia guidelines" },
+      { id: "neuro", title: "Neurological Care and Head Trauma", sub: "TBI management, neuro assessments, ICP management" },
+      { id: "cardio", title: "Acute Medical and Cardiological Care", sub: "ECG interpretation, STEMI, and sepsis management" }
+    ];
+
+    const questionBank = {
+      beginner: {
+        doctrine: [
+          { q: "What is the primary objective of Tactical Combat Casualty Care (TCCC) during the Care Under Fire phase?", opts: { A: "Perform a full secondary survey", B: "Suppress enemy fire and move to cover", C: "Initiate a Ketamine drip", D: "Insert a chest tube" }, ans: "B", exp: { A: "A secondary survey is a time-consuming process performed in a safe environment (Tactical Field Care), not while under active threat.", B: "In Care Under Fire, the absolute priority is tactical survival and gaining fire superiority.", C: "IV access and medications require focus and fine motor skills, which are impossible and dangerous to attempt during an active firefight.", D: "Advanced airway/breathing interventions are deferred until you are behind cover. Only massive hemorrhage is addressed in this phase.", key: "The best medicine on the battlefield is fire superiority. Only immediate life threats (massive hemorrhage) are addressed here." } },
+          { q: "What is the standard Role 1 medical capability in military doctrine?", opts: { A: "Specialized surgical care", B: "Unit-level care, self-aid and buddy-aid", C: "Theatre hospital with ICU", D: "Definitive care in Canada" }, ans: "B", exp: { A: "Specialized surgical and holding capabilities belong to Role 2 or 3 facilities.", B: "Role 1 is the first level of care, encompassing point-of-injury care, combat lifesavers, and unit medics.", C: "A theatre hospital with ICU beds is the definition of a Role 3 facility.", D: "Definitive care in the home country represents Role 4/5.", key: "Roles of care define progressively advanced capabilities, starting at Role 1 (Unit Level/First Responder) up to Role 5 (Definitive Rehab)." } },
+          { q: "According to the CAF Spectrum of Care, what is the Stewardship principle?", opts: { A: "Providing any treatment a member requests", B: "Ensuring evidence-based, beneficial care", C: "Only providing care during combat", D: "Member pay-for-service" }, ans: "B", exp: { A: "Care is based on medical necessity and evidence, not simply on patient requests or 'wants'.", B: "Stewardship focuses on providing evidence-informed care and responsible use of public healthcare resources.", C: "The Spectrum of Care applies to all CAF members at all times, not just during combat operations.", D: "Required care is provided at public expense; there is no pay-for-service for necessary medical treatment.", key: "Operational readiness and evidence-based resource stewardship are central pillars of CAF medical funding." } }
+        ],
+        behavioral: [
+          { q: "Content coming soon.", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder.", B: "Placeholder.", C: "Placeholder.", D: "Placeholder.", key: "Under development." } }
+        ],
+        airway: [
+          { q: "What is the preferred treatment for an open 'sucking' chest wound in the field?", opts: { A: "A standard gauze bandage", B: "A vented occlusive chest seal", C: "A pressure dressing", D: "Suturing the wound shut" }, ans: "B", exp: { A: "Standard gauze is porous; air will continue to be sucked into the pleural space during inspiration.", B: "A vented seal acts as a one-way valve: it allows trapped air and blood to escape during exhalation but prevents air entry during inspiration.", C: "A pressure dressing is used for massive hemorrhage, but does not reliably seal the pleural cavity.", D: "Suturing a wound in the field traps air inside, rapidly converting an open pneumothorax into a lethal tension pneumothorax.", key: "Vented chest seals prevent the development of a tension pneumothorax while sealing the defect." } },
+          { q: "Which device is commonly used for basic airway management in an unconscious casualty with no gag reflex?", opts: { A: "Surgical cric kit", B: "Oropharyngeal Airway (OPA)", C: "Nasal Cannula", D: "CPAP Mask" }, ans: "B", exp: { A: "A surgical airway is an advanced, invasive procedure used only when basic maneuvers and adjuncts fail.", B: "The OPA physically keeps the tongue from falling back and obstructing the airway in an unconscious patient.", C: "A nasal cannula delivers oxygen but does nothing to physically open a blocked airway.", D: "CPAP requires a spontaneously breathing patient who can protect their own airway and is conscious enough to tolerate the mask.", key: "An OPA should NEVER be used in a conscious patient as it will trigger a gag reflex and vomiting." } },
+          { q: "Where is the standard recommended site for a needle chest decompression in TCCC?", opts: { A: "Directly into the heart", B: "2nd Intercostal Space, Mid-clavicular Line", C: "Between the shoulder blades", D: "The navel" }, ans: "B", exp: { A: "Inserting a needle into the heart is fatal. The target is the pleural space outside the lung.", B: "The 2nd intercostal space at the mid-clavicular line is the traditional landmark to quickly relieve intrathoracic tension.", C: "Posterior access is not used for emergent needle decompression due to patient positioning (usually supine) and thick musculature.", D: "The navel provides access to the abdomen, completely missing the thoracic cavity.", key: "Current TCCC guidelines also heavily endorse the 5th Intercostal Space, Anterior Axillary line due to thinner chest wall tissues." } }
+        ],
+        circulation: [
+          { q: "When establishing an intraosseous (IO) infusion, which is an absolute contraindication for site selection?", opts: { A: "A fracture in the bone selected", B: "Hypovolemic shock", C: "Unconscious patient", D: "Presence of a tourniquet" }, ans: "A", exp: { A: "If the bone is fractured, the infused fluids/medications will leak out of the medullary space into the surrounding tissue compartment.", B: "Hypovolemic shock is a primary indication for an IO, as peripheral veins often collapse.", C: "Consciousness level does not dictate IO usage; IOs are routinely used in unconscious cardiac arrests.", D: "While a tourniquet proximal to the site will impede systemic flow, a fracture is an absolute structural contraindication.", key: "Always palpate and assess the integrity of the bone before drilling. If fractured, pick another site." } },
+          { q: "When inserting an EZ-IO intraosseous needle, when should you stop powering the driver?", opts: { A: "When the hub touches the skin", B: "When you feel a 'pop' or loss of resistance", C: "After exactly 10 seconds", D: "When you see blood in the hub" }, ans: "B", exp: { A: "Stopping at the skin will likely leave the needle tip in the dense cortex, not the hollow marrow.", B: "The 'pop' indicates the needle has breached the hard outer cortex and entered the soft medullary space.", C: "Drilling for a set time ignores anatomical differences; you will likely drill completely through the other side of the bone.", D: "Blood is rarely seen during active drilling. Confirmation by aspiration happens after the driver is removed.", key: "Let the drill do the work. Do not apply heavy downward pressure, and stop immediately upon feeling the loss of resistance." } }
+        ],
+        clinical: [
+          { q: "What is considered a normal adult resting heart rate range?", opts: { A: "30-50 bpm", B: "60-100 bpm", C: "100-140 bpm", D: "50-120 bpm" }, ans: "B", exp: { A: "30-50 bpm is considered bradycardia (unless the patient is a highly trained elite athlete).", B: "60-100 bpm is the globally accepted standard for a normal adult resting heart rate.", C: "100-140 bpm indicates tachycardia, which could signify pain, shock, anxiety, or fever.", D: "This range is too broad and includes both bradycardic and tachycardic states.", key: "A sustained resting heart rate over 100 bpm in a trauma patient is an early indicator of hypovolemic shock." } }
+        ],
+        analgesia: [
+          { q: "A combat medic is treating a casualty with moderate pain who is hemodynamically stable. Which medication is appropriate per TCCC?", opts: { A: "IV Morphine 10 mg", B: "OTFC 800 μg (Fentanyl Lozenge)", C: "IV Ketamine 50 mg", D: "IM Naloxone 0.4 mg" }, ans: "B", exp: { A: "10 mg of IV Morphine is a very high initial dose that risks severe respiratory depression and hypotension.", B: "Oral Transmucosal Fentanyl Citrate (OTFC) 800mcg is the TCCC standard for moderate-to-severe pain in a conscious, stable casualty.", C: "50 mg of IV Ketamine is approaching a dissociative/sedation dose, overshooting basic pain control.", D: "Naloxone is an opioid reversal agent, not a pain medication.", key: "TCCC utilizes a tiered analgesia approach: Tylenol/Meloxicam for mild, OTFC for moderate, and low-dose Ketamine for severe/shock." } },
+          { q: "What is the standard IV direct dose range of Ketamine for procedural sedation?", opts: { A: "0.25 to 1 mg/kg", B: "5 to 10 mg/kg", C: "25 to 50 mg/kg", D: "100 mg flat dose" }, ans: "A", exp: { A: "0.25 to 1 mg/kg IV is the standard range to achieve dissociation for short, painful procedures.", B: "5 to 10 mg/kg is the dose range for Intramuscular (IM) injection, not Intravenous (IV).", C: "25 to 50 mg/kg IV would be a massive, potentially lethal overdose.", D: "A flat 100mg dose ignores patient weight and could cause severe respiratory depression in smaller individuals.", key: "Always push IV Ketamine slowly (over 60 seconds) to prevent apnea and sudden laryngospasm." } }
+        ],
+        pharmacology: [
+          { q: "Which medication is a specific antagonist used to reverse a benzodiazepine overdose?", opts: { A: "Naloxone", B: "Flumazenil", C: "Atropine", D: "Glycopyrrolate" }, ans: "B", exp: { A: "Naloxone (Narcan) reverses opioids (fentanyl, morphine), not benzodiazepines.", B: "Flumazenil specifically reverses the effects of benzodiazepines (like midazolam or lorazepam).", C: "Atropine is used for symptomatic bradycardia or organophosphate poisoning.", D: "Glycopyrrolate is an anticholinergic used to dry up oral secretions, often given alongside Ketamine.", key: "Use Flumazenil with extreme caution in chronic benzodiazepine users, as rapid reversal can trigger intractable withdrawal seizures." } },
+          { q: "What is the preferred route and dose of Epinephrine for an adult suffering an anaphylactic reaction?", opts: { A: "1 mg IV", B: "0.3 to 0.5 mg IM", C: "5 mg nebulized", D: "0.1 mg Subcut" }, ans: "B", exp: { A: "1 mg IV push is the cardiac arrest dose. Giving this to a conscious patient with a pulse can cause a lethal arrhythmia or stroke.", B: "0.3 to 0.5 mg injected Intramuscularly (IM) into the lateral thigh is the gold standard for anaphylaxis.", C: "Nebulized Epi is used for croup or extreme bronchospasm, but won't reverse the systemic shock of anaphylaxis.", D: "Subcutaneous absorption is too slow during the profound peripheral vasoconstriction/shock of anaphylaxis.", key: "IM epinephrine in the vastus lateralis (thigh) provides the most rapid and reliable absorption during allergic shock." } }
+        ],
+        environmental: [
+          { q: "What is the Rule of Nines percentage assigned to a single adult arm?", opts: { A: "4.5%", B: "9%", C: "18%", D: "1%" }, ans: "B", exp: { A: "4.5% represents only the front (anterior) half of the arm.", B: "The entire arm (front and back) accounts for 9% of the Total Body Surface Area (TBSA).", C: "18% represents a full leg, or the entire anterior chest/abdomen.", D: "1% represents the patient's palm/hand or the groin area.", key: "The Rule of Nines allows for rapid field estimation of burn size to guide fluid resuscitation." } }
+        ],
+        neuro: [
+          { q: "What does the 'V' represent in the AVPU scale?", opts: { A: "Ventilation", B: "Voice/Verbal", C: "Visual", D: "Vascular" }, ans: "B", exp: { A: "AVPU assesses neurology/consciousness, not breathing status.", B: "V stands for Voice (or Verbal). It means the patient is not fully alert, but will respond when spoken to.", C: "Visual is not part of this scale; eye opening is part of the GCS, but not AVPU.", D: "Vascular refers to blood flow, not neurological status.", key: "AVPU stands for: Alert, Voice, Pain, Unresponsive. It is a rapid triage alternative to the full GCS." } }
+        ],
+        cardio: [
+          { q: "In ECG interpretation, what does the P wave represent?", opts: { A: "Ventricular depolarization", B: "Atrial depolarization", C: "Ventricular repolarization", D: "AV node delay" }, ans: "B", exp: { A: "Ventricular depolarization is represented by the massive QRS complex.", B: "The P wave represents the electrical firing (depolarization) of the atria, pushing blood into the ventricles.", C: "Ventricular repolarization (resetting) is represented by the T wave.", D: "The AV node delay is represented by the flat PR segment between the P wave and the QRS.", key: "A normal sinus rhythm requires a uniform P wave preceding every QRS complex." } }
+        ]
+      },
+      intermediate: {
+        doctrine: [
+          { q: "Placeholder: Intermediate Doctrine Question 1", opts: { A: "Opt 1", B: "Opt 2", C: "Opt 3", D: "Opt 4" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Placeholder" } }
+        ],
+        behavioral: [
+          { q: "Content coming soon.", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Placeholder" } }
+        ],
+        airway: [
+          { q: "A patient requires a chest tube. Where is the 'Triangle of Safety' landmark for insertion?", opts: { A: "2nd ICS MCL", B: "5th ICS Mid-axillary line", C: "7th ICS Posterior", D: "Sternum" }, ans: "B", exp: { A: "The 2nd ICS MCL is the traditional site for a needle decompression, but is too high and constrained for a surgical chest tube.", B: "The 5th ICS at the mid-axillary line forms the triangle of safety, avoiding major muscles and internal organs like the liver/spleen.", C: "The 7th ICS is too low; inserting here risks perforating the diaphragm and abdominal organs.", D: "The sternum is solid bone covering the heart; a chest tube goes into the pleural space on the side.", key: "The Triangle of Safety is bordered by the latissimus dorsi, the lateral edge of the pec major, and a line superior to the nipple." } },
+          { q: "What is the GCS threshold where intubation is usually required for airway protection?", opts: { A: "GCS < 12", B: "GCS < 8", C: "GCS < 15", D: "GCS < 3" }, ans: "B", exp: { A: "A GCS of 11 or 12 indicates altered mental status, but protective airway reflexes are usually still intact.", B: "Less than 8, Intubate. At this level of coma, the patient generally loses their gag and cough reflexes, risking fatal aspiration.", C: "A GCS of 14 or 15 is a normal, alert patient.", D: "A GCS of 3 is a completely unresponsive, flaccid patient. While they absolutely need an airway, waiting until they drop to 3 is too late.", key: "GCS less than 8 = Intubate. Protect the airway before they aspirate." } }
+        ],
+        circulation: [
+          { q: "Placeholder: Intermediate Circulation Question 1", opts: { A: "Opt 1", B: "Opt 2", C: "Opt 3", D: "Opt 4" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Placeholder" } }
+        ],
+        clinical: [
+          { q: "What is the external rotation method used for in an austere setting?", opts: { A: "Fixing a fractured femur", B: "Reducing anterior shoulder dislocation", C: "Opening an airway", D: "Spinal immobilization" }, ans: "B", exp: { A: "Femur fractures require linear traction (like a Sager splint), not rotation.", B: "External rotation is a gentle, highly effective method to reduce an anterior shoulder dislocation without heavy sedation.", C: "The jaw-thrust or head-tilt-chin-lift are used for airways, not external rotation.", D: "Spines must be kept perfectly in-line, not rotated.", key: "Compared to forceful traction-countertraction, the external rotation method minimizes muscle spasm and pain." } }
+        ],
+        analgesia: [
+          { q: "Intermediate PA Medical Directive: What is the Ketamine loading dose for procedural sedation?", opts: { A: "0.5 mg/kg", B: "1 mg/kg", C: "2 mg/kg", D: "5 mg/kg" }, ans: "B", exp: { A: "0.5 mg/kg IV is an analgesic dose for severe pain, but will not reliably induce dissociative sedation.", B: "1 mg/kg IV is the standard loading dose to achieve deep procedural sedation and dissociation.", C: "2 mg/kg IV is an induction dose for rapid sequence intubation (RSI).", D: "5 mg/kg is the dose used for Intramuscular (IM) injection, as IM absorption requires a much higher volume to achieve the same effect.", key: "Always push the 1 mg/kg IV dose slowly over 60 seconds to mitigate the risk of transient apnea." } }
+        ],
+        pharmacology: [
+          { q: "What is the standard TNK (Tenecteplase) dose for a STEMI patient weighing 75 kg?", opts: { A: "30 mg", B: "35 mg", C: "40 mg", D: "50 mg" }, ans: "C", exp: { A: "30 mg is the dose for patients under 60 kg.", B: "35 mg is the dose for patients between 60 and 69 kg.", C: "40 mg (8 mL) is the precise weight-based dose for a patient in the 70-79 kg range.", D: "50 mg is the maximum dose, given only to patients 90 kg or heavier.", key: "Fibrinolytic dosing is strictly weight-based. Overdosing heavily increases the risk of intracranial hemorrhage." } }
+        ],
+        environmental: [
+          { q: "A patient develops hard, stony muscle compartments after an electrical injury. Immediate treatment?", opts: { A: "Apply ice packs", B: "Emergent fasciotomy", C: "Oral Tylenol", D: "Wait and monitor" }, ans: "B", exp: { A: "Ice causes vasoconstriction, worsening the ischemia in a compartment already starving for blood.", B: "A hard, stony muscle indicates compartment syndrome. A surgical fasciotomy is required immediately to slice open the fascia and relieve pressure.", C: "Tylenol will do nothing for the massive ischemic pain and tissue death occurring.", D: "Waiting will result in irreversible muscle necrosis and potential amputation.", key: "High-voltage electrical injuries often cause massive deep tissue swelling that standard skin burns hide." } },
+          { q: "What is the PFC target urine output for an adult with severe thermal burns?", opts: { A: "10-20 mL/hr", B: "30-50 mL/hr", C: "100-200 mL/hr", D: "500 mL/hr" }, ans: "B", exp: { A: "10-20 mL/hr indicates under-resuscitation and acute kidney injury.", B: "30-50 mL/hr is the optimal target. It proves the kidneys are perfused without overloading the lungs.", C: "100-200 mL/hr indicates over-resuscitation, which leads to massive edema and compartment syndrome.", D: "500 mL/hr is a massive output, likely washing out all electrolytes and causing fluid overload.", key: "Urine output is your speedometer for burn resuscitation. Too slow = kidney failure. Too fast = fluid overload." } }
+        ],
+        neuro: [
+          { q: "On a motor exam, what defines Grade 3 muscle strength?", opts: { A: "Trace flicker of movement", B: "Full ROM gravity eliminated", C: "Full ROM against gravity only", D: "Normal strength against resistance" }, ans: "C", exp: { A: "A trace flicker is Grade 1.", B: "Moving through the Range of Motion (ROM) only when resting on a bed (gravity eliminated) is Grade 2.", C: "Grade 3 means the patient can lift the limb against the pull of gravity, but cannot resist any downward pressure you apply.", D: "Normal strength against full resistance is Grade 5.", key: "Grade 3 is the baseline for functional movement. If they can't beat gravity, they can't walk or use their arms effectively." } }
+        ],
+        cardio: [
+          { q: "What is the clinical implication of a NEW Left Bundle Branch Block (LBBB) in a patient with active chest pain?", opts: { A: "Benign finding", B: "STEMI equivalent", C: "Normal variant for age", D: "Sign of anxiety" }, ans: "B", exp: { A: "A new LBBB is never benign in the setting of acute ischemic symptoms.", B: "A new LBBB indicates a massive blockage affecting the heart's conduction system, and is treated exactly like an acute STEMI.", C: "While old LBBBs can be chronic, a *new* one with pain is a medical emergency.", D: "Anxiety causes sinus tachycardia, not structural conduction blocks.", key: "New LBBB + Chest Pain = STEMI protocol. Prepare for fibrinolytics or immediate medevac." } }
+        ]
+      },
+      advanced: {
+        doctrine: [
+          { q: "What is the limited hold capability time frame of a Role 2 surgical facility?", opts: { A: "1 month", B: "Approx 72 hours", C: "1 patient only", D: "Zero capacity" }, ans: "B", exp: { A: "A Role 2 is a temporary, forward-deployed tent hospital. It does not hold patients long-term.", B: "Role 2 facilities are designed for damage control surgery and stabilization, holding patients for max 72 hours before evacuation.", C: "Role 2s have a small ward (usually 4-10 beds), not just one.", D: "Role 1 has zero hold capacity. Role 2 has limited holding.", key: "Role 2 equals damage control surgery and rapid onward movement." } }
+        ],
+        behavioral: [
+          { q: "Content coming soon.", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Placeholder" } }
+        ],
+        airway: [
+          { q: "What is the RASS target for a mechanically ventilated patient in Prolonged Field Care?", opts: { A: "0", B: "-1 to -2", C: "-5", D: "+4" }, ans: "B", exp: { A: "0 is alert and calm. An intubated patient at 0 will likely buck the ventilator and pull the tube out.", B: "-1 to -2 represents light sedation. The patient is sleepy but arouses to voice, preventing ventilator dyssynchrony while allowing neuro checks.", C: "-5 is unarousable coma. Over-sedating prolongs ventilation time and hides neurological deterioration.", D: "+4 is combative and violent, completely incompatible with a breathing tube.", key: "Light sedation (-1 to -2) is the standard in modern ICU and PFC care to shorten vent times and prevent delirium." } }
+        ],
+        circulation: [
+          { q: "An ECG shows wide QRS and loss of P waves after rapidly infusing multiple units of stored whole blood. Priority treatment?", opts: { A: "More blood", B: "Calcium gluconate/chloride", C: "Epinephrine", D: "Needle decompression" }, ans: "B", exp: { A: "More blood will worsen the underlying electrolyte imbalance causing the ECG changes.", B: "These are classic signs of Hyperkalemia. Stored blood leaks potassium over time. Calcium stabilizes the cardiac membrane immediately.", C: "Epinephrine will increase heart rate but won't fix the potassium toxicity.", D: "This treats a tension pneumo, which doesn't present with pure electrical hyperkalemic changes.", key: "Massive transfusion protocols must include Calcium to counteract citrate toxicity and hyperkalemia from stored blood." } }
+        ],
+        clinical: [
+          { q: "Content coming soon.", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Placeholder" } }
+        ],
+        analgesia: [
+          { q: "Which drug is characterized by producing catalepsy and nystagmus while preserving spontaneous breathing?", opts: { A: "Morphine", B: "Ketamine", C: "Midazolam", D: "Fentanyl" }, ans: "B", exp: { A: "Morphine depresses the respiratory drive heavily.", B: "Ketamine causes a dissociative state where the brain is disconnected from pain, but airway reflexes and breathing remain intact. Eyes often remain open (nystagmus).", C: "Midazolam causes profound muscle relaxation and respiratory depression.", D: "Fentanyl is a powerful opioid that halts breathing at sedative doses.", key: "Ketamine is the ultimate austere environment drug because it provides profound analgesia/sedation without killing the patient's drive to breathe." } }
+        ],
+        pharmacology: [
+          { q: "How is a standard Norepinephrine drip mixed to yield a 16 mcg/mL concentration?", opts: { A: "4 mg in 250 mL D5W", B: "8 mg in 100 mL NS", C: "16 mg in 50 mL", D: "Direct push undiluted" }, ans: "A", exp: { A: "4 mg (4000 mcg) divided by 250 mL equals exactly 16 mcg/mL. This is the standard ICU mixture.", B: "8mg in 100mL yields an incredibly concentrated 80 mcg/mL, increasing risk of extravasation necrosis.", C: "16mg in 50mL yields 320 mcg/mL, which is dangerously concentrated.", D: "Norepinephrine is a potent vasopressor that must be dripped; a direct push will cause a massive, lethal hypertensive spike.", key: "Standard 'Quad' Levophed is 4mg in 250mL D5W. Requires a pump or highly precise drip counting." } }
+        ],
+        environmental: [
+          { q: "What is the preferred site for obtaining a core temperature in an intubated hypothermic patient?", opts: { A: "Tympanic (Ear)", B: "Oral", C: "Lower 1/3 of esophagus", D: "Axillary (Armpit)" }, ans: "C", exp: { A: "Ear temps are highly inaccurate in cold environments due to ambient air exposure.", B: "Oral temps are impossible in an intubated patient and inaccurate if breathing cold air.", C: "An esophageal probe sits directly behind the heart, providing the most accurate core body/cardiac temperature.", D: "Armpit temps measure skin, not core, and are completely unreliable in profound shock/vasoconstriction.", key: "In profound hypothermia or shock, surface temperatures (skin, ear, armpit) lie. You need esophageal or bladder probes." } }
+        ],
+        neuro: [
+          { q: "In a TBI patient, what ONSD (Optic Nerve Sheath Diameter) threshold suggests dangerously elevated Intracranial Pressure (ICP)?", opts: { A: "< 3mm", B: "> 5mm", C: "> 10mm", D: "Not measurable by ultrasound" }, ans: "B", exp: { A: "Under 3mm is a normal, healthy optic nerve.", B: "A diameter greater than 5.0 - 5.5 mm (measured 3mm behind the globe) strongly correlates with elevated ICP > 20mmHg.", C: "10mm is anatomically massive and beyond the typical diagnostic threshold.", D: "ONSD is easily measured with a standard portable ultrasound using the linear probe over a closed eyelid.", key: "In austere settings without CT scanners, ONSD ultrasound is your best window into the pressure inside the skull." } }
+        ],
+        cardio: [
+          { q: "What is the strict SBP (Systolic Blood Pressure) threshold where a Nitro IV infusion must be avoided in a STEMI?", opts: { A: "120 mmHg", B: "100 mmHg", C: "90 mmHg", D: "60 mmHg" }, ans: "C", exp: { A: "120 is normal; Nitro is safe here.", B: "100 is borderline, but Nitro can still be used carefully.", C: "Nitro is an aggressive vasodilator. If SBP is under 90 mmHg, Nitro will crash the patient's preload and induce lethal cardiogenic shock.", D: "Waiting until 60 mmHg is far too late; the patient is already in profound unrecoverable shock.", key: "Never give Nitroglycerin (spray or drip) if the systolic BP is less than 90 mmHg, or if the patient took Viagra/Cialis recently." } }
+        ]
+      },
+      naval: {
+        doctrine: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ],
+        behavioral: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ],
+        airway: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ],
+        circulation: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ],
+        clinical: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ],
+        analgesia: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ],
+        pharmacology: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ],
+        environmental: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ],
+        neuro: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ],
+        cardio: [
+          { q: "Content coming soon (Naval Operations).", opts: { A: "Acknowledge", B: "N/A", C: "N/A", D: "N/A" }, ans: "A", exp: { A: "Placeholder", B: "Placeholder", C: "Placeholder", D: "Placeholder", key: "Under development." } }
+        ]
+      }
+    };
+
+    const STORAGE_KEY = 'tacticalMedicalMastery_v2';
+
+    const defaultProgress = {
+      mastery: {},
+      review: {},
+      records: { bestStreak: 0 }
+    };
+
+    const state = {
+      level: null,
+      topic: null,
+      mode: 'normal',
+      questionSet: [],
+      index: 0,
+      score: 0,
+      streak: 0,
+      selected: null,
+      showExplanation: false,
+      incorrectSession: new Set(),
+      flaggedSession: new Set(),
+      progress: loadProgress()
+    };
+
+    const screens = ['homeScreen', 'categoryScreen', 'quizScreen', 'summaryScreen'];
+
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredCloneSafe(defaultProgress);
+        const parsed = JSON.parse(raw);
+        return {
+          mastery: parsed.mastery || {},
+          review: parsed.review || {},
+          records: parsed.records || { bestStreak: 0 }
+        };
+      } catch (e) {
+        return structuredCloneSafe(defaultProgress);
+      }
+    }
+
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
+    }
+
+    function structuredCloneSafe(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function showScreen(name) {
+      screens.forEach(s => document.getElementById(s).classList.remove('active'));
+      document.getElementById(name).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function selectLevel(level) {
+      state.level = level;
+      const titleDisplay = level === 'naval'
+        ? "Naval & Remote Ops"
+        : level.charAt(0).toUpperCase() + level.slice(1) + " Phase";
+      document.getElementById('selectedLevelTitle').textContent = titleDisplay;
+      renderCategories();
+      showScreen('categoryScreen');
+    }
+
+    function renderCategories() {
+      const grid = document.getElementById('categoryGrid');
+      grid.innerHTML = '';
+
+      topics.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'card-btn';
+        btn.onclick = () => startQuiz(t.id, 'normal');
+
+        const qCount = questionBank[state.level][t.id] ? questionBank[state.level][t.id].length : 0;
+        const mastery = getTopicMastery(state.level, t.id);
+        const review = getTopicReview(state.level, t.id);
+
+        btn.innerHTML = `
+          <div class="btn-title">${t.title}</div>
+          <div class="btn-sub">${t.sub}</div>
+          <div class="topic-stats">
+            <span class="pill">${qCount} Qs</span>
+            <span class="pill soft">Mastery ${mastery.percent}%</span>
+            <span class="pill warn">Missed ${review.incorrect.length}</span>
+            <span class="pill warn">Flagged ${review.flagged.length}</span>
+          </div>
+        `;
+        grid.appendChild(btn);
+      });
+    }
+
+    function goHome() {
+      state.level = null;
+      state.topic = null;
+      state.mode = 'normal';
+      showScreen('homeScreen');
+    }
+
+    function goBackToCategories() {
+      state.mode = 'normal';
+      renderCategories();
+      showScreen('categoryScreen');
+    }
+
+    function startQuiz(topicId, mode = 'normal') {
+      state.topic = topicId;
+      state.mode = mode;
+      state.index = 0;
+      state.score = 0;
+      state.streak = 0;
+      state.selected = null;
+      state.showExplanation = false;
+      state.incorrectSession = new Set();
+      state.flaggedSession = new Set(getTopicReview(state.level, topicId).flagged);
+
+      const prepared = buildQuestionSet(state.level, topicId, mode);
+
+      if (!prepared.length) {
+        if (mode === 'incorrect') {
+          alert('No saved incorrect questions for this topic yet.');
+        } else if (mode === 'flagged') {
+          alert('No flagged questions for this topic yet.');
+        } else {
+          alert('No questions available for this topic.');
+        }
+        return;
+      }
+
+      state.questionSet = prepared;
+      renderQuestion();
+      showScreen('quizScreen');
+    }
+
+    function startReviewMode(mode) {
+      startQuiz(state.topic, mode);
+    }
+
+    function buildQuestionSet(level, topicId, mode = 'normal') {
+      const rawQuestions = questionBank[level][topicId] || [];
+      const review = getTopicReview(level, topicId);
+
+      let selectedQuestions = rawQuestions.map((q, idx) => ({ ...q, __id: buildQuestionId(level, topicId, idx, q.q) }));
+
+      if (mode === 'incorrect') {
+        selectedQuestions = selectedQuestions.filter(q => review.incorrect.includes(q.__id));
+      } else if (mode === 'flagged') {
+        selectedQuestions = selectedQuestions.filter(q => review.flagged.includes(q.__id));
+      }
+
+      const shuffledQuestions = shuffleArray(selectedQuestions.slice());
+      return shuffledQuestions.map(prepareQuestionForSession);
+    }
+
+    function prepareQuestionForSession(rawQuestion) {
+      const optionEntries = Object.keys(rawQuestion.opts).map(originalKey => ({
+        originalKey,
+        text: rawQuestion.opts[originalKey],
+        explanation: rawQuestion.exp[originalKey] || ''
+      }));
+
+      const shuffledOptions = shuffleArray(optionEntries.slice());
+      const displayLetters = ['A', 'B', 'C', 'D'];
+
+      const displayOpts = {};
+      const displayExp = {};
+      let correctKey = 'A';
+
+      shuffledOptions.forEach((opt, idx) => {
+        const displayKey = displayLetters[idx];
+        displayOpts[displayKey] = opt.text;
+        displayExp[displayKey] = opt.explanation;
+        if (opt.originalKey === rawQuestion.ans) {
+          correctKey = displayKey;
+        }
+      });
+
+      return {
+        id: rawQuestion.__id,
+        q: rawQuestion.q,
+        opts: displayOpts,
+        ans: correctKey,
+        exp: {
+          ...displayExp,
+          key: rawQuestion.exp.key || "Review protocol."
+        }
+      };
+    }
+
+    function renderQuestion() {
+      const current = state.questionSet[state.index];
+      const topicTitle = topics.find(t => t.id === state.topic).title;
+      const modeLabel = getModeLabel();
+
+      document.getElementById('quizPathLabel').textContent = modeLabel ? `${topicTitle} • ${modeLabel}` : topicTitle;
+      document.getElementById('questionMeta').textContent = `Question ${state.index + 1} of ${state.questionSet.length}`;
+      document.getElementById('streakValue').textContent = String(state.streak);
+      document.getElementById('progressBar').style.width = (((state.index) / state.questionSet.length) * 100) + '%';
+      document.getElementById('questionText').textContent = current.q;
+
+      renderFlagButton(current.id);
+
+      const wrap = document.getElementById('optionsWrap');
+      wrap.innerHTML = '';
+
+      Object.keys(current.opts).forEach(key => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<strong>${key}.</strong> ${current.opts[key]}`;
+        btn.onclick = () => handleAnswer(key);
+
+        if (state.showExplanation) {
+          if (key === current.ans) btn.classList.add('correct');
+          else if (key === state.selected) btn.classList.add('incorrect');
+          else btn.classList.add('dim');
+          btn.disabled = true;
+        }
+
+        wrap.appendChild(btn);
+      });
+
+      const expBox = document.getElementById('explanationBox');
+      const wrongBlock = document.getElementById('wrongExpBlock');
+      const rightBlock = document.getElementById('rightExpBlock');
+      const doctrineBlock = document.getElementById('doctrineBlock');
+
+      if (state.showExplanation) {
+        const correct = state.selected === current.ans;
+        expBox.className = 'explanation show';
+
+        document.getElementById('explanationTitle').textContent = correct ? 'Correct!' : 'Incorrect';
+        document.getElementById('explanationTitle').style.color = correct ? '#16a34a' : '#dc2626';
+
+        if (correct) {
+          wrongBlock.style.display = 'none';
+          rightBlock.style.display = 'block';
+          document.getElementById('rightLabel').textContent = `Analysis of Option ${current.ans}:`;
+          document.getElementById('rightText').textContent = current.exp[current.ans] || "Correct answer.";
+        } else {
+          wrongBlock.style.display = 'block';
+          rightBlock.style.display = 'block';
+          document.getElementById('wrongText').textContent = current.exp[state.selected] || "Incorrect choice.";
+          document.getElementById('rightLabel').textContent = `Correct Answer (${current.ans}):`;
+          document.getElementById('rightText').textContent = current.exp[current.ans] || "Correct answer.";
+        }
+
+        doctrineBlock.style.display = 'block';
+        document.getElementById('keyText').textContent = current.exp.key || "Review protocol.";
+        document.getElementById('nextBtn').textContent = (state.index + 1 < state.questionSet.length) ? 'Next Question' : 'View Results';
+      } else {
+        expBox.className = 'explanation';
+        wrongBlock.style.display = 'none';
+        rightBlock.style.display = 'none';
+        doctrineBlock.style.display = 'none';
+      }
+    }
+
+    function handleAnswer(key) {
+      if (state.showExplanation) return;
+
+      const current = state.questionSet[state.index];
+      state.selected = key;
+      state.showExplanation = true;
+
+      if (key === current.ans) {
+        state.score++;
+        state.streak++;
+        if (state.streak > (state.progress.records.bestStreak || 0)) {
+          state.progress.records.bestStreak = state.streak;
+          saveProgress();
+        }
+        removeFromReviewList('incorrect', current.id);
+      } else {
+        state.streak = 0;
+        state.incorrectSession.add(current.id);
+        addToReviewList('incorrect', current.id);
+      }
+
+      renderQuestion();
+      document.getElementById('progressBar').style.width = (((state.index + 1) / state.questionSet.length) * 100) + '%';
+    }
+
+    function nextQuestion() {
+      if (state.index + 1 < state.questionSet.length) {
+        state.index++;
+        state.selected = null;
+        state.showExplanation = false;
+        renderQuestion();
+      } else {
+        renderSummary();
+      }
+    }
+
+    function toggleFlagCurrent() {
+      const current = state.questionSet[state.index];
+      if (!current) return;
+
+      if (state.flaggedSession.has(current.id)) {
+        state.flaggedSession.delete(current.id);
+        removeFromReviewList('flagged', current.id);
+      } else {
+        state.flaggedSession.add(current.id);
+        addToReviewList('flagged', current.id);
+      }
+
+      renderFlagButton(current.id);
+    }
+
+    function renderFlagButton(questionId) {
+      const btn = document.getElementById('flagBtn');
+      const flagged = state.flaggedSession.has(questionId);
+
+      btn.textContent = flagged ? '★ Flagged' : '☆ Flag';
+      btn.classList.toggle('active-flag', flagged);
+    }
+
+    function renderSummary() {
+      const total = state.questionSet.length;
+      const percent = Math.round((state.score / total) * 100);
+
+      updateTopicMastery(state.level, state.topic, state.score, total, percent);
+      syncReviewStateForTopic();
+
+      const mastery = getTopicMastery(state.level, state.topic);
+      const review = getTopicReview(state.level, state.topic);
+
+      let feedback = percent >= 80
+        ? "Excellent. You have a solid grasp of this topic."
+        : "Good effort. Review the Analysis sections and use the saved review modes to strengthen weak points.";
+
+      if (state.mode === 'incorrect') {
+        feedback = "Incorrect-question review complete. Recheck any remaining saved misses.";
+      } else if (state.mode === 'flagged') {
+        feedback = "Flagged-question review complete. Keep trimming that saved flagged list.";
+      }
+
+      document.getElementById('summaryFeedback').textContent = feedback;
+      document.getElementById('summaryPercent').textContent = percent + '%';
+      document.getElementById('summaryCount').textContent = `${state.score} / ${total} Correct`;
+
+      document.getElementById('masterySummary').innerHTML = `
+        <strong>Topic Mastery</strong><br>
+        Current mastery: <strong>${mastery.percent}%</strong><br>
+        Best score: <strong>${mastery.bestPercent}%</strong><br>
+        Attempts: <strong>${mastery.attempts}</strong>
+      `;
+
+      document.getElementById('reviewSummary').innerHTML = `
+        <strong>Saved Review Pools</strong><br>
+        Incorrect saved: <strong>${review.incorrect.length}</strong><br>
+        Flagged saved: <strong>${review.flagged.length}</strong><br>
+        Best streak overall: <strong>${state.progress.records.bestStreak || 0}</strong>
+      `;
+
+      const retryIncorrectBtn = document.getElementById('retryIncorrectBtn');
+      const retryFlaggedBtn = document.getElementById('retryFlaggedBtn');
+
+      retryIncorrectBtn.disabled = review.incorrect.length === 0;
+      retryFlaggedBtn.disabled = review.flagged.length === 0;
+
+      retryIncorrectBtn.style.opacity = review.incorrect.length === 0 ? '0.5' : '1';
+      retryFlaggedBtn.style.opacity = review.flagged.length === 0 ? '0.5' : '1';
+
+      saveProgress();
+      showScreen('summaryScreen');
+    }
+
+    function updateTopicMastery(level, topicId, score, total, percent) {
+      ensureTopicPath('mastery', level, topicId, {
+        attempts: 0,
+        totalCorrect: 0,
+        totalQuestions: 0,
+        percent: 0,
+        bestPercent: 0,
+        lastPercent: 0
+      });
+
+      const entry = state.progress.mastery[level][topicId];
+      entry.attempts += 1;
+      entry.totalCorrect += score;
+      entry.totalQuestions += total;
+      entry.percent = entry.totalQuestions ? Math.round((entry.totalCorrect / entry.totalQuestions) * 100) : 0;
+      entry.bestPercent = Math.max(entry.bestPercent || 0, percent);
+      entry.lastPercent = percent;
+    }
+
+    function getTopicMastery(level, topicId) {
+      ensureTopicPath('mastery', level, topicId, {
+        attempts: 0,
+        totalCorrect: 0,
+        totalQuestions: 0,
+        percent: 0,
+        bestPercent: 0,
+        lastPercent: 0
+      });
+      return state.progress.mastery[level][topicId];
+    }
+
+    function getTopicReview(level, topicId) {
+      ensureTopicPath('review', level, topicId, {
+        incorrect: [],
+        flagged: []
+      });
+      return state.progress.review[level][topicId];
+    }
+
+    function ensureTopicPath(section, level, topicId, defaults) {
+      if (!state.progress[section][level]) state.progress[section][level] = {};
+      if (!state.progress[section][level][topicId]) {
+        state.progress[section][level][topicId] = structuredCloneSafe(defaults);
+      }
+    }
+
+    function addToReviewList(type, questionId) {
+      const review = getTopicReview(state.level, state.topic);
+      if (!review[type].includes(questionId)) {
+        review[type].push(questionId);
+        saveProgress();
+      }
+    }
+
+    function removeFromReviewList(type, questionId) {
+      const review = getTopicReview(state.level, state.topic);
+      const before = review[type].length;
+      review[type] = review[type].filter(id => id !== questionId);
+      if (review[type].length !== before) saveProgress();
+    }
+
+    function syncReviewStateForTopic() {
+      const review = getTopicReview(state.level, state.topic);
+
+      review.flagged = Array.from(new Set([...review.flagged, ...Array.from(state.flaggedSession)]));
+      review.incorrect = Array.from(new Set([...review.incorrect, ...Array.from(state.incorrectSession)]));
+
+      if (state.mode === 'incorrect') {
+        const correctedThisRound = state.questionSet
+          .filter(q => !state.incorrectSession.has(q.id))
+          .map(q => q.id);
+        review.incorrect = review.incorrect.filter(id => !correctedThisRound.includes(id));
+      }
+
+      if (state.mode
