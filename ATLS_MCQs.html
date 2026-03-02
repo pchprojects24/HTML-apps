@@ -227,7 +227,7 @@ const sectionModes = {
   advanced: { label: "Advanced", stem: q => `In a high-acuity or resource-limited resuscitation with competing priorities, which choice best reflects ATLS-based management of ${q.core}?` }
 };
 
-const stateKey = "atls_mcq_trainer_v2";
+const stateKey = "atls_mcq_trainer_v3";
 const saved = JSON.parse(localStorage.getItem(stateKey) || "{}");
 const state = {
   mode: saved.mode || "beginner",
@@ -249,8 +249,37 @@ function persist() {
   }));
 }
 
+function seededRandom(seed) {
+  let s = seed >>> 0;
+  return function() {
+    s = Math.imul(s, 1664525) + 1013904223 >>> 0;
+    return s / 0x100000000;
+  };
+}
+
+function shuffleQuestion(q) {
+  const labels = ["A", "B", "C", "D"];
+  const seed = q.qid.split("").reduce((acc, c) => Math.imul(acc, 31) + c.charCodeAt(0), 1);
+  const rand = seededRandom(seed);
+  const perm = [0, 1, 2, 3];
+  for (let i = 3; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [perm[i], perm[j]] = [perm[j], perm[i]];
+  }
+  const origCorrectIdx = labels.indexOf(q.answer);
+  const newCorrectIdx = perm.indexOf(origCorrectIdx);
+  const newWrongs = {};
+  labels.forEach((label, newIdx) => {
+    newWrongs[label] = q.wrongs[labels[perm[newIdx]]];
+  });
+  return { ...q, options: perm.map(i => q.options[i]), answer: labels[newCorrectIdx], wrongs: newWrongs };
+}
+
 function fullSet(mode) {
-  return baseQuestions.map(q => ({ ...q, qid: `${mode}-${q.id}`, section: mode, stem: sectionModes[mode].stem(q) }));
+  return baseQuestions.map(q => {
+    const enriched = { ...q, qid: `${mode}-${q.id}`, section: mode, stem: sectionModes[mode].stem(q) };
+    return shuffleQuestion(enriched);
+  });
 }
 
 function topics() {
@@ -363,6 +392,10 @@ function renderQuestionList() {
 }
 
 function explanationHtml(q) {
+  const wrongItems = ["A","B","C","D"]
+    .filter(l => l !== q.answer)
+    .map(l => `<li><strong>Why ${l} is wrong:</strong> ${q.wrongs[l]}</li>`)
+    .join("");
   return `
     <div class="ans-label">Correct Answer:</div>
     <div><strong>${q.answer}</strong></div>
@@ -370,10 +403,7 @@ function explanationHtml(q) {
       <strong>Explanation:</strong>
       <ul>
         <li><strong>Why correct:</strong> ${q.teach}</li>
-        <li><strong>Why A is wrong:</strong> ${q.wrongs.A}</li>
-        <li><strong>Why B is wrong:</strong> ${q.wrongs.B}</li>
-        <li><strong>Why C is wrong:</strong> ${q.wrongs.C}</li>
-        <li><strong>Why D is wrong:</strong> ${q.wrongs.D}</li>
+        ${wrongItems}
       </ul>
     </div>`;
 }
