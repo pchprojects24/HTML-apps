@@ -306,7 +306,8 @@ const sectionModes = {
 };
 
 const stateKey = "atls_mcq_trainer_v3";
-const saved = JSON.parse(localStorage.getItem(stateKey) || "{}");
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(stateKey) || "{}") || {}; } catch(e) {}
 const state = {
   mode: saved.mode || "beginner",
   topic: saved.topic || "All topics",
@@ -329,6 +330,9 @@ function persist() {
 
 function seededRandom(seed) {
   let s = seed >>> 0;
+  s = Math.imul(s ^ (s >>> 16), 0x45d9f3b);
+  s = Math.imul(s ^ (s >>> 13), 0x45d9f3b);
+  s = (s ^ (s >>> 16)) >>> 0;
   return function() {
     s = Math.imul(s, 1664525) + 1013904223 >>> 0;
     return s / 0x100000000;
@@ -562,7 +566,7 @@ function nextUnanswered() {
   const items = filteredSet();
   const idx = items.findIndex(q => q.qid === state.currentQid);
   const after = items.slice(idx + 1).find(q => !state.answers[q.qid]);
-  const before = items.slice(0, idx + 1).find(q => !state.answers[q.qid]);
+  const before = items.slice(0, idx).find(q => !state.answers[q.qid]);
   const target = after || before;
   if (target) openQuestion(target.qid);
   else alert("No unanswered questions in the current filter.");
@@ -575,6 +579,7 @@ function showHome() {
 }
 
 function showQuiz() {
+  document.getElementById("landingView").classList.add("hidden");
   document.getElementById("homeView").classList.add("hidden");
   document.getElementById("quizView").classList.remove("hidden");
 }
