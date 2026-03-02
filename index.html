@@ -1,1 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HTML Apps Landing Page</title>
+  <style>
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:#f1f5f9; color:#0f172a; }
+    .wrap { max-width:900px; margin:0 auto; padding:20px; }
+    .hero, .card { background:#fff; border:1px solid #dbe5f0; border-radius:16px; }
+    .hero { padding:18px; margin-bottom:14px; }
+    .grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+    .card { padding:14px; text-decoration:none; color:inherit; }
+    .card h2 { margin:0 0 8px; font-size:1.1rem; }
+    .card p { margin:0; color:#475569; line-height:1.45; font-size:.94rem; }
+    .card:hover { border-color:#2563eb; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>Single-File Medical Study Apps</h1>
+      <p>Quick launch page for your standalone HTML apps. Each app is designed to open directly in a browser and work as a single file.</p>
+    </section>
 
+    <section class="grid">
+      <a class="card" href="ATLS_MCQs">
+        <h2>ATLS MCQs</h2>
+        <p>Advanced Trauma Life Support study questions.</p>
+      </a>
+      <a class="card" href="ACLS_MCQs">
+        <h2>ACLS MCQ Framework</h2>
+        <p>Starter framework for Canadian-first ACLS multiple-choice practice topics.</p>
+      </a>
+      <a class="card" href="ACTT_MCQs">
+        <h2>ACTT MCQs</h2>
+        <p>Tactical and transport-focused question trainer.</p>
+      </a>
+    </section>
+  </main>
+</body>
+</html>
