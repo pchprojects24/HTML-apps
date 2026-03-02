@@ -9,7 +9,7 @@
     :root { --bg:#0b1020; --panel:#121a2e; --panel2:#1a2644; --text:#e8edf7; --muted:#a7b2c9; --accent:#60a5fa; --ok:#22c55e; --bad:#ef4444; --border:rgba(255,255,255,.1); }
     * { box-sizing:border-box; }
     body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:linear-gradient(180deg,#09101f,#101a30 55%,#0b1020); color:var(--text); }
-    .app { max-width:980px; margin:0 auto; padding:16px; }
+    .app { max-width:1024px; margin:0 auto; padding:16px; }
     .card { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:16px; }
     .hero { padding:16px; margin-bottom:12px; }
     .hero h1 { margin:0 0 6px; font-size:clamp(1.3rem,4vw,2rem); }
@@ -30,7 +30,7 @@
     .opt { width:100%; text-align:left; padding:10px; }
     .opt.correct { border-color:rgba(34,197,94,.6); background:rgba(34,197,94,.14); }
     .opt.wrong { border-color:rgba(239,68,68,.6); background:rgba(239,68,68,.12); }
-    .feedback { margin-top:10px; padding:10px; border-radius:10px; border:1px solid var(--border); display:none; }
+    .feedback { margin-top:10px; padding:10px; border-radius:10px; border:1px solid var(--border); display:none; line-height:1.45; }
     .feedback.show { display:block; }
     .good { border-color:rgba(34,197,94,.4); }
     .bad { border-color:rgba(239,68,68,.4); }
@@ -42,7 +42,7 @@
     <section id="homeView">
       <div class="card hero">
         <h1>ACLS MCQ Framework</h1>
-        <p class="sub">Single-file, offline-friendly multiple-choice framework for Advanced Cardiac Life Support study. This starter build focuses on high-level topic scaffolding and sample questions.</p>
+        <p class="sub">Single-file, offline-friendly multiple-choice framework for Advanced Cardiac Life Support study. Includes broad ACLS algorithms, adjacent emergency pathways, and expandable question architecture.</p>
         <p class="sub">Guideline intent: Canada-first (Heart &amp; Stroke Foundation ACLS context), cross-checked with international consensus themes (ILCOR/AHA/ERC). Always verify your local protocol updates.</p>
       </div>
 
@@ -76,12 +76,41 @@
 
   <script>
     const QUESTIONS = [
-      { id:"cpr-01", topic:"High-Quality CPR & Team Basics", stem:"During adult cardiac arrest, which action best reflects high-quality CPR priorities?", options:["Minimize interruptions with frequent pulse checks","Compression rate 100-120/min with full recoil and minimal pauses","Ventilate aggressively at 20/min once airway is placed","Pause compressions every minute for rhythm checks"], answer:1, explanation:"Core high-performance CPR includes 100-120/min rate, appropriate depth, full recoil, and minimal interruptions." },
-      { id:"arrest-01", topic:"Cardiac Arrest: VF/pVT vs PEA/Asystole", stem:"In a pulseless patient with shockable VF, what is the next best immediate sequence?", options:["Defibrillate, resume CPR immediately, then reassess rhythm after cycle","Give atropine before shock","Provide synchronized cardioversion first","Delay shock until IV access is secured"], answer:0, explanation:"For shockable rhythms, deliver unsynchronized shock and immediately resume CPR for the next cycle." },
-      { id:"brady-01", topic:"Symptomatic Bradycardia", stem:"A patient has symptomatic bradycardia with hypotension and altered mentation not improving with oxygen. What is a key early ACLS step?", options:["Observe for 30 minutes before treatment","Start treatment pathway (atropine and/or pacing readiness) while addressing reversible causes","Immediate adenosine push","Defibrillate at maximum dose"], answer:1, explanation:"Symptomatic, unstable bradycardia requires prompt algorithm-based management and correction of reversible causes." },
-      { id:"tachy-01", topic:"Tachycardia With Pulse", stem:"For unstable tachycardia with signs of shock, ACLS priorities emphasize:", options:["Oral beta-blocker then reassess in 1 hour","Immediate synchronized cardioversion with ongoing reassessment","No intervention if QRS is narrow","Routine magnesium for all rhythms before ECG"], answer:1, explanation:"Unstable tachycardia with a pulse is treated with synchronized cardioversion while preparing airway/supportive care." },
-      { id:"post-01", topic:"Post-Cardiac Arrest Care", stem:"After return of spontaneous circulation (ROSC), which bundle element is most aligned with guideline-based post-arrest care?", options:["Avoid hemodynamic targets and focus only on sedation","Structured post-arrest care including oxygenation/ventilation targets, blood pressure support, and cause evaluation","Immediate discharge once awake","Delay 12-lead ECG until next day"], answer:1, explanation:"Post-ROSC care requires organized hemodynamic, respiratory, neurologic, and etiologic management." },
-      { id:"systems-01", topic:"Systems, Human Factors & Ethics", stem:"Which team behavior most improves resuscitation performance?", options:["Independent silent task work","Closed-loop communication with explicit role assignment","Frequent role switching without announcement","Limiting debriefing to rare events"], answer:1, explanation:"Closed-loop communication and clear role assignment improve reliability and reduce cognitive overload." }
+      { id:"cpr-01", topic:"High-Quality CPR & Team Dynamics", stem:"Which action best supports high-quality adult CPR during a code?", options:["Pause compressions every 30 seconds to recheck pulse","Maintain 100-120/min compressions with full recoil and minimal interruptions","Prioritize intubation before the first compression cycle","Ventilate at 20-24 breaths/min without advanced airway"], answer:1, rationales:["Frequent pulse checks reduce perfusion and should be avoided.","Correct. High-quality CPR requires 100-120/min, full recoil, and minimal pauses.","Airway management should not delay compressions and defibrillation priorities.","Without advanced airway, excessive ventilation is harmful and not guideline aligned."] },
+      { id:"cpr-02", topic:"High-Quality CPR & Team Dynamics", stem:"What team behavior is most likely to improve resuscitation reliability?", options:["Closed-loop communication with role clarity","Independent silent work to avoid confusion","Frequent role changes without announcing them","Skipping post-event debriefs to save time"], answer:0, rationales:["Correct. Closed-loop communication and clear roles improve safety and execution.","Silence increases missed tasks and communication errors.","Unannounced role changes can create critical task gaps.","Debriefs improve future performance and are recommended."] },
+
+      { id:"shock-01", topic:"Cardiac Arrest: Shockable Rhythms (VF/pVT)", stem:"A patient is pulseless with coarse VF on monitor. What is the best immediate next action?", options:["Synchronized cardioversion","Deliver unsynchronized defibrillation and resume CPR immediately","Administer adenosine first","Delay shock until arterial line placement"], answer:1, rationales:["Synchronized cardioversion is for unstable tachycardia with a pulse.","Correct. VF/pVT requires immediate defibrillation, then immediate CPR resumption.","Adenosine is for select stable SVT rhythms, not pulseless arrest.","Defibrillation should not be delayed for invasive monitoring."] },
+      { id:"shock-02", topic:"Cardiac Arrest: Shockable Rhythms (VF/pVT)", stem:"After a second shock in persistent VF/pVT, which medication is typically prioritized in ACLS?", options:["Epinephrine 1 mg IV/IO every 3-5 minutes during ongoing cycles","Atropine 1 mg once","Diltiazem infusion","Routine sodium bicarbonate for all arrests"], answer:0, rationales:["Correct. Epinephrine is given during arrest cycles at 3-5 minute intervals.","Atropine is not standard for routine pulseless VF/pVT management.","Diltiazem is not used in pulseless shockable arrest.","Bicarbonate is reserved for specific indications, not all arrests."] },
+
+      { id:"nonshock-01", topic:"Cardiac Arrest: Non-Shockable Rhythms (PEA/Asystole)", stem:"In confirmed asystole, which intervention is appropriate?", options:["Immediate defibrillation at maximal energy","High-quality CPR with epinephrine and search for reversible causes","Synchronized cardioversion","Adenosine rapid push"], answer:1, rationales:["Asystole is non-shockable and should not be defibrillated.","Correct. PEA/asystole management centers on CPR, epinephrine, and Hs/Ts.","Synchronized cardioversion requires an organized rhythm with a pulse.","Adenosine has no role in asystolic arrest."] },
+      { id:"nonshock-02", topic:"Cardiac Arrest: Non-Shockable Rhythms (PEA/Asystole)", stem:"Which statement about PEA is most accurate?", options:["It is always treated with immediate defibrillation","It represents electrical activity without effective pulse and needs cause-directed treatment","It is managed primarily with atropine boluses","It indicates ROSC if monitor rhythm appears organized"], answer:1, rationales:["PEA is non-shockable unless rhythm changes to VF/pVT.","Correct. PEA requires CPR plus rapid identification of reversible causes.","Atropine is not core PEA therapy.","Organized rhythm alone does not confirm perfusing circulation."] },
+
+      { id:"ht-01", topic:"Reversible Causes (Hs and Ts)", stem:"Which pair are classic reversible causes of cardiac arrest?", options:["Hypovolemia and tension pneumothorax","Hyperglycemia and migraine","Renal colic and appendicitis","Hypertension and sinusitis"], answer:0, rationales:["Correct. Both are well-known Hs/Ts causes and should be actively sought.","These are not ACLS reversible arrest causes.","These are unrelated to ACLS Hs/Ts arrest framework.","These are not recognized primary arrest Hs/Ts factors."] },
+      { id:"ht-02", topic:"Reversible Causes (Hs and Ts)", stem:"During PEA arrest with unilateral absent breath sounds and sudden hypotension, what cause is most concerning?", options:["Tension pneumothorax","Hypoglycemia","Pulmonary edema only","Myocarditis"], answer:0, rationales:["Correct. Clinical pattern strongly suggests tension pneumothorax as a reversible cause.","Hypoglycemia may alter mentation but is less consistent with this arrest pattern.","Pulmonary edema does not explain unilateral absent breath sounds in this context.","Myocarditis can cause instability but this exam pattern points elsewhere."] },
+
+      { id:"brady-01", topic:"Symptomatic Bradycardia", stem:"A patient with HR 32/min has hypotension and confusion. Initial ACLS-directed treatment includes:", options:["Observe for spontaneous recovery only","Atropine while preparing pacing and evaluating causes","Immediate unsynchronized defibrillation","Adenosine push"], answer:1, rationales:["Symptomatic unstable bradycardia needs active treatment.","Correct. Atropine is first-line in many cases; pacing readiness is essential if poor response.","Defibrillation is for pulseless rhythms, not bradycardia with pulse.","Adenosine treats select tachyarrhythmias, not bradycardia."] },
+      { id:"brady-02", topic:"Symptomatic Bradycardia", stem:"If atropine is ineffective in unstable bradycardia, what is a guideline-consistent next step?", options:["Prepare transcutaneous pacing and/or start vasoactive infusion per protocol","No further therapy is indicated","Give calcium channel blocker","Use synchronized cardioversion"], answer:0, rationales:["Correct. Escalation includes pacing and/or dopamine/epinephrine infusion by protocol.","Persistent instability requires escalation.","Calcium channel blockers can worsen bradycardia/hypotension.","Cardioversion treats tachyarrhythmias, not slow unstable rhythms."] },
+
+      { id:"tachy-01", topic:"Tachycardia With Pulse", stem:"What is preferred for unstable tachycardia with a pulse and signs of shock?", options:["Immediate synchronized cardioversion","Observe and repeat ECG in 2 hours","Routine adenosine for all wide-complex rhythms","Start oral beta blocker and discharge"], answer:0, rationales:["Correct. Unstable tachycardia requires urgent synchronized cardioversion.","Delay in an unstable patient increases risk.","Adenosine is rhythm-specific and not universal for wide-complex instability.","Discharge is unsafe in unstable tachycardia."] },
+      { id:"tachy-02", topic:"Tachycardia With Pulse", stem:"A stable, regular, narrow-complex tachycardia persists after vagal maneuvers. What is reasonable next?", options:["Adenosine rapid IV push with monitoring","Unsynchronized defibrillation","Atropine administration","No rhythm therapy until next day"], answer:0, rationales:["Correct. Adenosine is appropriate for stable regular narrow-complex SVT patterns.","Defibrillation is not indicated in stable narrow-complex SVT.","Atropine is for bradycardia.","Therapy should not be delayed when symptomatic tachycardia persists."] },
+
+      { id:"acs-01", topic:"Acute Coronary Syndromes", stem:"In suspected ACS, which early action is guideline-consistent?", options:["Obtain/review 12-lead ECG rapidly and stratify for reperfusion pathway","Delay ECG until biomarkers return","Give fibrinolytic to all chest pain patients","Avoid antiplatelet therapy in all cases"], answer:0, rationales:["Correct. Early ECG supports diagnosis and reperfusion decision-making.","Early ECG should not wait for troponin results.","Fibrinolysis is selective, not universal.","Antiplatelet therapy is often appropriate unless contraindicated."] },
+      { id:"acs-02", topic:"Acute Coronary Syndromes", stem:"Which finding most strongly supports immediate STEMI activation workflow?", options:["Persistent ST-elevation in a compatible clinical context","Normal ECG with resolved symptoms","Isolated sinus bradycardia without ischemic symptoms","Mild chest wall tenderness only"], answer:0, rationales:["Correct. Persistent ST-elevation with ischemic features triggers reperfusion pathways.","Normal ECG does not support STEMI activation by itself.","Bradycardia alone is not equivalent to STEMI diagnosis.","Musculoskeletal pain alone is less suggestive of coronary occlusion."] },
+
+      { id:"stroke-01", topic:"Suspected Stroke (ACLS-Adjacent)", stem:"What is a key first priority in an acute stroke pathway?", options:["Rapid stroke recognition with urgent neuroimaging workflow activation","Delay assessment until blood pressure normalizes","Provide routine sedation immediately","Give thrombolytic before imaging"], answer:0, rationales:["Correct. Time-sensitive recognition and imaging are central to acute stroke care.","Delays reduce eligibility for reperfusion therapies.","Routine sedation can obscure neurologic exam.","Brain imaging is required before thrombolysis decisions."] },
+      { id:"stroke-02", topic:"Suspected Stroke (ACLS-Adjacent)", stem:"Which statement about stroke timing is most accurate?", options:["Time-last-known-well is crucial for reperfusion eligibility","Only patient age determines thrombolysis candidacy","Stroke pathway can wait until ICU transfer","Neurologic deficits must resolve before imaging"], answer:0, rationales:["Correct. Last-known-well time directly informs treatment windows.","Candidacy depends on multiple factors, not age alone.","Rapid ED/hospital pathway activation is needed.","Imaging is urgent even when deficits persist."] },
+
+      { id:"post-01", topic:"Post-Cardiac Arrest Care", stem:"After ROSC, which care element is foundational?", options:["Target oxygenation/ventilation and support blood pressure while searching cause","Stop monitoring once pulse returns","Delay 12-lead ECG until next day","Avoid temperature management discussions"], answer:0, rationales:["Correct. Post-ROSC care requires structured hemodynamic, respiratory, and etiologic management.","ROSC does not end critical care needs.","Early ECG may identify acute coronary cause.","Temperature and neurologic strategies should be considered early."] },
+      { id:"post-02", topic:"Post-Cardiac Arrest Care", stem:"Which best reflects neurologic-focused post-arrest planning?", options:["Multimodal prognostication at appropriate time and avoidance of premature conclusions","Immediate withdrawal decisions based on one exam shortly after ROSC","No need to reassess sedation effects","Neurologic status is irrelevant if blood pressure is stable"], answer:0, rationales:["Correct. Prognostication should be multimodal and time-appropriate.","Early single-point assessment can be misleading.","Sedatives/paralytics can confound exam and must be considered.","Neurologic care remains central after ROSC."] },
+
+      { id:"airway-01", topic:"Airway & Ventilation", stem:"During CPR with advanced airway in place, what ventilation strategy is preferred?", options:["Continuous compressions with asynchronous breaths about every 6 seconds","Pause compressions for every breath pair","Ventilate at 30 breaths/min to maximize oxygen","Use large tidal volumes to speed CO2 clearance"], answer:0, rationales:["Correct. With advanced airway, provide continuous compressions and ~10 breaths/min.","Frequent pauses reduce coronary/cerebral perfusion.","Hyperventilation can worsen outcomes.","Excess tidal volume increases intrathoracic pressure and harms perfusion."] },
+      { id:"airway-02", topic:"Airway & Ventilation", stem:"Which capnography trend during CPR is generally reassuring about compression quality/ROSC potential?", options:["Persistently very low ETCO2 despite optimized CPR","Abrupt sustained rise in ETCO2 with clinical context","No waveform at all due to disconnection","Progressive decline after quality worsens"], answer:1, rationales:["Persistently low ETCO2 may suggest poor perfusion or poor-quality compressions.","Correct. A sudden sustained ETCO2 increase may indicate ROSC when correlated clinically.","Absent waveform indicates technical/airway issue, not reassuring physiology.","Declining ETCO2 is generally concerning, not reassuring."] },
+
+      { id:"ana-01", topic:"Anaphylaxis & Allergic Emergency", stem:"In severe anaphylaxis with airway compromise and hypotension, first-line medication is:", options:["IM epinephrine promptly","Diphenhydramine alone","Nebulized bronchodilator only","IV bicarbonate"], answer:0, rationales:["Correct. IM epinephrine is first-line and should not be delayed.","Antihistamines are adjunctive and slower for life-threatening features.","Bronchodilator alone does not treat distributive shock/airway edema pathophysiology.","Bicarbonate has no first-line role in anaphylaxis treatment."] },
+      { id:"ana-02", topic:"Anaphylaxis & Allergic Emergency", stem:"After initial epinephrine in anaphylaxis, which next approach is most appropriate?", options:["Ongoing airway, breathing, circulation reassessment with repeat epinephrine if needed","Immediate discharge without observation","Avoid IV fluids in hypotension","Rely only on corticosteroids for rapid reversal"], answer:0, rationales:["Correct. Reassessment plus repeat epinephrine/adjuncts and supportive care are key.","Patients need monitoring for progression or biphasic reactions.","IV fluids are often needed in anaphylactic hypotension.","Steroids are not rapid first-line rescue."] },
+
+      { id:"special-01", topic:"Special Circumstances", stem:"In maternal cardiac arrest, what modification is important late in pregnancy?", options:["Manual left uterine displacement to reduce aortocaval compression","Avoid defibrillation in pregnancy","Decrease compression depth substantially","Delay airway support until obstetrics arrives"], answer:0, rationales:["Correct. Left uterine displacement improves venous return and CPR effectiveness.","Defibrillation energy is not routinely reduced solely due to pregnancy.","High-quality compressions are still required.","Airway/oxygenation support remains urgent."] },
+      { id:"special-02", topic:"Special Circumstances", stem:"For suspected opioid-associated respiratory arrest with a pulse, priority management includes:", options:["Support ventilation and consider naloxone while monitoring response","Immediate defibrillation","Routine thrombolysis","Withhold oxygen to avoid suppressing drive"], answer:0, rationales:["Correct. Ventilation support is primary; naloxone can be considered in opioid toxicity.","Defibrillation is not indicated with organized pulse and respiratory depression.","Thrombolysis is not standard for opioid overdose.","Oxygen should not be withheld in hypoventilation/hypoxia."] }
     ];
 
     const topics = [...new Set(QUESTIONS.map(q => q.topic))];
@@ -94,6 +123,7 @@
         return fallback;
       }
     };
+
     const state = {
       topic: topics[0],
       current: 0,
@@ -133,10 +163,17 @@
     function renderTabs() {
       tabs.innerHTML = "";
       topics.forEach(topic => {
+        const count = QUESTIONS.filter(q => q.topic === topic).length;
         const b = document.createElement("button");
         b.className = "tab" + (topic === state.topic ? " active" : "");
-        b.textContent = topic;
-        b.onclick = () => { state.topic = topic; state.reviewFlagged = false; renderTabs(); renderList(); refreshStats(); };
+        b.textContent = `${topic} (${count})`;
+        b.onclick = () => {
+          state.topic = topic;
+          state.reviewFlagged = false;
+          renderTabs();
+          renderList();
+          refreshStats();
+        };
         tabs.appendChild(b);
       });
     }
@@ -165,6 +202,7 @@
       const q = list[state.current];
       const chosen = state.answers[q.id];
       const done = chosen !== undefined;
+      const isCorrect = chosen === q.answer;
 
       quizContent.innerHTML = `
         <div class="muted">${q.topic} • Question ${state.current + 1} of ${list.length}</div>
@@ -172,8 +210,10 @@
         <div class="opts">
           ${q.options.map((opt, i) => `<button class="opt ${done && i === q.answer ? "correct" : ""} ${done && chosen === i && i !== q.answer ? "wrong" : ""}" data-i="${i}"><strong>${String.fromCharCode(65+i)}.</strong> ${opt}</button>`).join("")}
         </div>
-        <div class="feedback ${done ? "show " + (chosen === q.answer ? "good" : "bad") : ""}">
-          ${done ? `<strong>${chosen === q.answer ? "Correct" : "Not quite"}</strong><div>${q.explanation}</div>` : "Choose an option to see feedback."}
+        <div class="feedback ${done ? "show " + (isCorrect ? "good" : "bad") : ""}">
+          ${done
+            ? `<strong>${isCorrect ? "Correct" : "Not quite"}</strong><div>${q.rationales[chosen]}</div>`
+            : "Choose an option to see feedback."}
         </div>
       `;
 
@@ -189,13 +229,30 @@
       });
     }
 
-    document.getElementById("backBtn").onclick = () => { quizView.style.display = "none"; homeView.style.display = "block"; };
-    document.getElementById("prevBtn").onclick = () => { if (state.current > 0) { state.current -= 1; renderQuestion(); } };
-    document.getElementById("nextBtn").onclick = () => { const list = filtered(); if (state.current < list.length - 1) { state.current += 1; renderQuestion(); } };
+    document.getElementById("backBtn").onclick = () => {
+      quizView.style.display = "none";
+      homeView.style.display = "block";
+    };
+    document.getElementById("prevBtn").onclick = () => {
+      if (state.current > 0) {
+        state.current -= 1;
+        renderQuestion();
+      }
+    };
+    document.getElementById("nextBtn").onclick = () => {
+      const list = filtered();
+      if (state.current < list.length - 1) {
+        state.current += 1;
+        renderQuestion();
+      }
+    };
     document.getElementById("toggleFlagBtn").onclick = () => {
       const q = filtered()[state.current];
-      if (state.flagged.includes(q.id)) state.flagged = state.flagged.filter(id => id !== q.id);
-      else state.flagged.push(q.id);
+      if (state.flagged.includes(q.id)) {
+        state.flagged = state.flagged.filter(id => id !== q.id);
+      } else {
+        state.flagged.push(q.id);
+      }
       const list = filtered();
       if (!list.length) {
         state.reviewFlagged = false;
@@ -210,6 +267,7 @@
       renderList();
       if (quizView.style.display === "block") renderQuestion();
     };
+
     document.getElementById("resetBtn").onclick = () => {
       if (!confirm("Reset all ACLS progress?")) return;
       state.answers = {};
@@ -218,10 +276,13 @@
       renderList();
       refreshStats();
     };
+
     document.getElementById("flagBtn").onclick = () => {
       if (!state.flagged.length) return alert("No flagged questions yet.");
       state.reviewFlagged = true;
-      renderTabs(); renderList(); refreshStats();
+      renderTabs();
+      renderList();
+      refreshStats();
     };
 
     renderTabs();
