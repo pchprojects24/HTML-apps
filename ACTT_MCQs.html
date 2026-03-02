@@ -769,6 +769,24 @@
       startQuiz(state.topic, mode);
     }
 
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function buildQuestionId(level, topicId, idx) {
+      return `${level}_${topicId}_${idx}`;
+    }
+
+    function getModeLabel() {
+      if (state.mode === 'incorrect') return 'Retry Incorrect';
+      if (state.mode === 'flagged') return 'Review Flagged';
+      return '';
+    }
+
     function buildQuestionSet(level, topicId, mode = 'normal') {
       const rawQuestions = questionBank[level][topicId] || [];
       const review = getTopicReview(level, topicId);
