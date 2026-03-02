@@ -1,1 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>ACLS MCQ Framework</title>
+  <style>
+    :root { --bg:#0b1020; --panel:#121a2e; --panel2:#1a2644; --text:#e8edf7; --muted:#a7b2c9; --accent:#60a5fa; --ok:#22c55e; --bad:#ef4444; --border:rgba(255,255,255,.1); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:linear-gradient(180deg,#09101f,#101a30 55%,#0b1020); color:var(--text); }
+    .app { max-width:980px; margin:0 auto; padding:16px; }
+    .card { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:16px; }
+    .hero { padding:16px; margin-bottom:12px; }
+    .hero h1 { margin:0 0 6px; font-size:clamp(1.3rem,4vw,2rem); }
+    .sub, .muted { color:var(--muted); line-height:1.45; }
+    .tabs, .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+    button { font:inherit; }
+    .tab, .btn, .opt { color:var(--text); background:var(--panel); border:1px solid var(--border); border-radius:12px; cursor:pointer; min-height:42px; }
+    .tab, .btn { padding:10px 12px; }
+    .tab.active { background:linear-gradient(135deg,rgba(96,165,250,.25),rgba(34,211,238,.18)); }
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px; margin-bottom:10px; }
+    .stat { padding:10px; background:var(--panel); border:1px solid var(--border); border-radius:12px; }
+    .stat .k { font-weight:700; font-size:1.1rem; }
+    .list { padding:12px; }
+    .q-link { width:100%; text-align:left; padding:10px 12px; margin-bottom:8px; background:var(--panel2); border:1px solid var(--border); border-radius:12px; color:var(--text); cursor:pointer; }
+    #quizView { display:none; }
+    .q-card { padding:14px; }
+    .opts { display:grid; gap:8px; margin-top:10px; }
+    .opt { width:100%; text-align:left; padding:10px; }
+    .opt.correct { border-color:rgba(34,197,94,.6); background:rgba(34,197,94,.14); }
+    .opt.wrong { border-color:rgba(239,68,68,.6); background:rgba(239,68,68,.12); }
+    .feedback { margin-top:10px; padding:10px; border-radius:10px; border:1px solid var(--border); display:none; }
+    .feedback.show { display:block; }
+    .good { border-color:rgba(34,197,94,.4); }
+    .bad { border-color:rgba(239,68,68,.4); }
+    .footer { margin-top:12px; font-size:.84rem; color:var(--muted); line-height:1.5; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="homeView">
+      <div class="card hero">
+        <h1>ACLS MCQ Framework</h1>
+        <p class="sub">Single-file, offline-friendly multiple-choice framework for Advanced Cardiac Life Support study. This starter build focuses on high-level topic scaffolding and sample questions.</p>
+        <p class="sub">Guideline intent: Canada-first (Heart &amp; Stroke Foundation ACLS context), cross-checked with international consensus themes (ILCOR/AHA/ERC). Always verify your local protocol updates.</p>
+      </div>
 
+      <div class="tabs" id="tabs"></div>
+      <div class="stats">
+        <div class="stat"><div class="k" id="scoreK">0%</div><div class="muted">Score</div></div>
+        <div class="stat"><div class="k" id="doneK">0 / 0</div><div class="muted">Answered</div></div>
+        <div class="stat"><div class="k" id="flagK">0</div><div class="muted">Flagged</div></div>
+      </div>
+
+      <div class="card list">
+        <div class="toolbar">
+          <button class="btn" id="resetBtn">Reset progress</button>
+          <button class="btn" id="flagBtn">Review flagged</button>
+        </div>
+        <div id="questionList"></div>
+      </div>
+      <p class="footer">Educational use only. This app is a framework starter and not a substitute for official ACLS provider manuals, institutional policies, or medical direction.</p>
+    </section>
+
+    <section id="quizView">
+      <div class="toolbar">
+        <button class="btn" id="backBtn">&larr; Back</button>
+        <button class="btn" id="prevBtn">Previous</button>
+        <button class="btn" id="nextBtn">Next</button>
+        <button class="btn" id="toggleFlagBtn">Toggle flag</button>
+      </div>
+      <div class="card q-card" id="quizContent"></div>
+    </section>
+  </main>
+
+  <script>
+    const QUESTIONS = [
+      { id:"cpr-01", topic:"High-Quality CPR & Team Basics", stem:"During adult cardiac arrest, which action best reflects high-quality CPR priorities?", options:["Minimize interruptions with frequent pulse checks","Compression rate 100-120/min with full recoil and minimal pauses","Ventilate aggressively at 20/min once airway is placed","Pause compressions every minute for rhythm checks"], answer:1, explanation:"Core high-performance CPR includes 100-120/min rate, appropriate depth, full recoil, and minimal interruptions." },
+      { id:"arrest-01", topic:"Cardiac Arrest: VF/pVT vs PEA/Asystole", stem:"In a pulseless patient with shockable VF, what is the next best immediate sequence?", options:["Defibrillate, resume CPR immediately, then reassess rhythm after cycle","Give atropine before shock","Provide synchronized cardioversion first","Delay shock until IV access is secured"], answer:0, explanation:"For shockable rhythms, deliver unsynchronized shock and immediately resume CPR for the next cycle." },
+      { id:"brady-01", topic:"Symptomatic Bradycardia", stem:"A patient has symptomatic bradycardia with hypotension and altered mentation not improving with oxygen. What is a key early ACLS step?", options:["Observe for 30 minutes before treatment","Start treatment pathway (atropine and/or pacing readiness) while addressing reversible causes","Immediate adenosine push","Defibrillate at maximum dose"], answer:1, explanation:"Symptomatic, unstable bradycardia requires prompt algorithm-based management and correction of reversible causes." },
+      { id:"tachy-01", topic:"Tachycardia With Pulse", stem:"For unstable tachycardia with signs of shock, ACLS priorities emphasize:", options:["Oral beta-blocker then reassess in 1 hour","Immediate synchronized cardioversion with ongoing reassessment","No intervention if QRS is narrow","Routine magnesium for all rhythms before ECG"], answer:1, explanation:"Unstable tachycardia with a pulse is treated with synchronized cardioversion while preparing airway/supportive care." },
+      { id:"post-01", topic:"Post-Cardiac Arrest Care", stem:"After return of spontaneous circulation (ROSC), which bundle element is most aligned with guideline-based post-arrest care?", options:["Avoid hemodynamic targets and focus only on sedation","Structured post-arrest care including oxygenation/ventilation targets, blood pressure support, and cause evaluation","Immediate discharge once awake","Delay 12-lead ECG until next day"], answer:1, explanation:"Post-ROSC care requires organized hemodynamic, respiratory, neurologic, and etiologic management." },
+      { id:"systems-01", topic:"Systems, Human Factors & Ethics", stem:"Which team behavior most improves resuscitation performance?", options:["Independent silent task work","Closed-loop communication with explicit role assignment","Frequent role switching without announcement","Limiting debriefing to rare events"], answer:1, explanation:"Closed-loop communication and clear role assignment improve reliability and reduce cognitive overload." }
+    ];
+
+    const topics = [...new Set(QUESTIONS.map(q => q.topic))];
+    const safeParse = (value, fallback) => {
+      if (value == null) return fallback;
+      try {
+        const parsed = JSON.parse(value);
+        return parsed == null ? fallback : parsed;
+      } catch {
+        return fallback;
+      }
+    };
+    const state = {
+      topic: topics[0],
+      current: 0,
+      reviewFlagged: false,
+      answers: safeParse(localStorage.getItem("acls_answers"), {}),
+      flagged: safeParse(localStorage.getItem("acls_flagged"), [])
+    };
+
+    const tabs = document.getElementById("tabs");
+    const questionList = document.getElementById("questionList");
+    const homeView = document.getElementById("homeView");
+    const quizView = document.getElementById("quizView");
+    const quizContent = document.getElementById("quizContent");
+    const scoreK = document.getElementById("scoreK");
+    const doneK = document.getElementById("doneK");
+    const flagK = document.getElementById("flagK");
+
+    function saveState() {
+      localStorage.setItem("acls_answers", JSON.stringify(state.answers));
+      localStorage.setItem("acls_flagged", JSON.stringify(state.flagged));
+    }
+
+    function filtered() {
+      if (state.reviewFlagged) return QUESTIONS.filter(q => state.flagged.includes(q.id));
+      return QUESTIONS.filter(q => q.topic === state.topic);
+    }
+
+    function refreshStats() {
+      const list = filtered();
+      const done = list.filter(q => state.answers[q.id] !== undefined).length;
+      const correct = list.filter(q => state.answers[q.id] === q.answer).length;
+      scoreK.textContent = done ? Math.round((correct / done) * 100) + "%" : "0%";
+      doneK.textContent = `${done} / ${list.length}`;
+      flagK.textContent = state.flagged.length;
+    }
+
+    function renderTabs() {
+      tabs.innerHTML = "";
+      topics.forEach(topic => {
+        const b = document.createElement("button");
+        b.className = "tab" + (topic === state.topic ? " active" : "");
+        b.textContent = topic;
+        b.onclick = () => { state.topic = topic; state.reviewFlagged = false; renderTabs(); renderList(); refreshStats(); };
+        tabs.appendChild(b);
+      });
+    }
+
+    function renderList() {
+      questionList.innerHTML = "";
+      filtered().forEach((q, idx) => {
+        const b = document.createElement("button");
+        const answered = state.answers[q.id] !== undefined;
+        b.className = "q-link";
+        b.innerHTML = `<strong>${idx + 1}. ${q.stem}</strong><br><span class="muted">${answered ? "Answered" : "Not answered"}${state.flagged.includes(q.id) ? " • Flagged" : ""}</span>`;
+        b.onclick = () => openQuestion(idx);
+        questionList.appendChild(b);
+      });
+    }
+
+    function openQuestion(i) {
+      state.current = i;
+      homeView.style.display = "none";
+      quizView.style.display = "block";
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const list = filtered();
+      const q = list[state.current];
+      const chosen = state.answers[q.id];
+      const done = chosen !== undefined;
+
+      quizContent.innerHTML = `
+        <div class="muted">${q.topic} • Question ${state.current + 1} of ${list.length}</div>
+        <h2 style="margin:8px 0 6px;">${q.stem}</h2>
+        <div class="opts">
+          ${q.options.map((opt, i) => `<button class="opt ${done && i === q.answer ? "correct" : ""} ${done && chosen === i && i !== q.answer ? "wrong" : ""}" data-i="${i}"><strong>${String.fromCharCode(65+i)}.</strong> ${opt}</button>`).join("")}
+        </div>
+        <div class="feedback ${done ? "show " + (chosen === q.answer ? "good" : "bad") : ""}">
+          ${done ? `<strong>${chosen === q.answer ? "Correct" : "Not quite"}</strong><div>${q.explanation}</div>` : "Choose an option to see feedback."}
+        </div>
+      `;
+
+      quizContent.querySelectorAll(".opt").forEach(btn => {
+        btn.onclick = () => {
+          if (done) return;
+          state.answers[q.id] = Number(btn.dataset.i);
+          saveState();
+          refreshStats();
+          renderList();
+          renderQuestion();
+        };
+      });
+    }
+
+    document.getElementById("backBtn").onclick = () => { quizView.style.display = "none"; homeView.style.display = "block"; };
+    document.getElementById("prevBtn").onclick = () => { if (state.current > 0) { state.current -= 1; renderQuestion(); } };
+    document.getElementById("nextBtn").onclick = () => { const list = filtered(); if (state.current < list.length - 1) { state.current += 1; renderQuestion(); } };
+    document.getElementById("toggleFlagBtn").onclick = () => {
+      const q = filtered()[state.current];
+      if (state.flagged.includes(q.id)) state.flagged = state.flagged.filter(id => id !== q.id);
+      else state.flagged.push(q.id);
+      const list = filtered();
+      if (!list.length) {
+        state.reviewFlagged = false;
+        state.current = 0;
+        quizView.style.display = "none";
+        homeView.style.display = "block";
+      } else if (state.current > list.length - 1) {
+        state.current = list.length - 1;
+      }
+      saveState();
+      refreshStats();
+      renderList();
+      if (quizView.style.display === "block") renderQuestion();
+    };
+    document.getElementById("resetBtn").onclick = () => {
+      if (!confirm("Reset all ACLS progress?")) return;
+      state.answers = {};
+      state.flagged = [];
+      saveState();
+      renderList();
+      refreshStats();
+    };
+    document.getElementById("flagBtn").onclick = () => {
+      if (!state.flagged.length) return alert("No flagged questions yet.");
+      state.reviewFlagged = true;
+      renderTabs(); renderList(); refreshStats();
+    };
+
+    renderTabs();
+    renderList();
+    refreshStats();
+  </script>
+</body>
+</html>
