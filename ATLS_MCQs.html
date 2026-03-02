@@ -290,7 +290,7 @@ function renderTabs() {
   Object.entries(sectionModes).forEach(([key, meta]) => {
     const b = document.createElement("button");
     b.className = "tab" + (state.mode === key ? " active" : "");
-    b.textContent = `${meta.label} (50)`;
+    b.textContent = `${meta.label} (${baseQuestions.length})`;
     b.onclick = () => {
       state.mode = key;
       state.topic = "All topics";
@@ -363,17 +363,19 @@ function renderQuestionList() {
 }
 
 function explanationHtml(q) {
+  const letters = ["A","B","C","D"];
+  const wrongItems = letters
+    .filter(l => l !== q.answer)
+    .map(l => `<li><strong>Why ${l} is wrong:</strong> ${q.wrongs[l]}</li>`)
+    .join("");
   return `
     <div class="ans-label">Correct Answer:</div>
     <div><strong>${q.answer}</strong></div>
     <div class="explain">
       <strong>Explanation:</strong>
       <ul>
-        <li><strong>Why correct:</strong> ${q.teach}</li>
-        <li><strong>Why A is wrong:</strong> ${q.wrongs.A}</li>
-        <li><strong>Why B is wrong:</strong> ${q.wrongs.B}</li>
-        <li><strong>Why C is wrong:</strong> ${q.wrongs.C}</li>
-        <li><strong>Why D is wrong:</strong> ${q.wrongs.D}</li>
+        <li><strong>Why ${q.answer} is correct:</strong> ${q.teach}</li>
+        ${wrongItems}
       </ul>
     </div>`;
 }
@@ -445,7 +447,7 @@ function nextUnanswered() {
   const items = filteredSet();
   const idx = items.findIndex(q => q.qid === state.currentQid);
   const after = items.slice(idx + 1).find(q => !state.answers[q.qid]);
-  const before = items.slice(0, idx + 1).find(q => !state.answers[q.qid]);
+  const before = items.slice(0, idx).find(q => !state.answers[q.qid]);
   const target = after || before;
   if (target) openQuestion(target.qid);
   else alert("No unanswered questions in the current filter.");

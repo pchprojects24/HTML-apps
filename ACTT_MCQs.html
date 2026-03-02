@@ -92,7 +92,7 @@
       transform: scale(0.98);
     }
 
-    .card-btn:hover, .option-btn:hover:not(:disabled), .ghost-btn:hover {
+    .card-btn:hover, .option-btn:hover:not(:disabled), .ghost-btn:hover:not(:disabled), .primary-btn:hover:not(:disabled) {
       border-color: var(--primary);
       background: #f0f7ff;
     }
@@ -294,7 +294,7 @@
       text-align: center;
     }
 
-    .primary-btn:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+    .primary-btn:hover:not(:disabled) { background: var(--primary-dark); border-color: var(--primary-dark); }
 
     .summary-card {
       padding: 24px;
@@ -1072,4 +1072,33 @@
         review.incorrect = review.incorrect.filter(id => !correctedThisRound.includes(id));
       }
 
-      if (state.mode
+      if (state.mode === 'flagged') {
+        const unflaggedThisRound = state.questionSet
+          .filter(q => !state.flaggedSession.has(q.id))
+          .map(q => q.id);
+        review.flagged = review.flagged.filter(id => !unflaggedThisRound.includes(id));
+      }
+
+      saveProgress();
+    }
+
+    function buildQuestionId(level, topicId, idx, questionText) {
+      return `${level}_${topicId}_${idx}_${questionText.substring(0, 30)}`;
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function getModeLabel() {
+      if (state.mode === 'incorrect') return 'Retry Incorrect';
+      if (state.mode === 'flagged') return 'Review Flagged';
+      return '';
+    }
+  </script>
+</body>
+</html>
