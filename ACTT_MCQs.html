@@ -348,6 +348,31 @@
       grid-template-columns: 1fr 1fr;
     }
 
+    .quiz-setup {
+      margin: 14px 0 10px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+      display: grid;
+      gap: 10px;
+    }
+
+    .quiz-setup-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .quiz-setup input {
+      width: 110px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      font: inherit;
+    }
+
     .footer-space { height: 14px; }
 
     @media (max-width: 640px) {
@@ -396,6 +421,17 @@
         <button class="ghost-btn" style="margin-bottom: 12px;" onclick="goHome()">← Back to Phases</button>
         <h1 id="selectedLevelTitle">Phase</h1>
         <p class="sub">Choose a topic to begin the assessment.</p>
+        <div class="quiz-setup">
+          <div class="quiz-setup-row">
+            <label for="questionCountInput"><strong>Question count:</strong></label>
+            <input id="questionCountInput" type="number" min="1" placeholder="All" />
+            <span class="sub" id="questionCountHint">Leave blank to use all questions in that selection.</span>
+          </div>
+          <div class="quiz-setup-row">
+            <button class="primary-btn" style="margin-top:0;" onclick="startMixedQuiz()">Start Mixed Topics Quiz</button>
+            <span class="sub">Randomly pulls questions from all topics in this phase.</span>
+          </div>
+        </div>
         <div id="categoryGrid" class="grid-btns">
           <!-- Categories injected here -->
         </div>
@@ -737,6 +773,7 @@
     }
 
     function startQuiz(topicId, mode = 'normal') {
+      const isMixed = topicId === '__mixed';
       state.topic = topicId;
       state.mode = mode;
       state.index = 0;
@@ -745,9 +782,11 @@
       state.selected = null;
       state.showExplanation = false;
       state.incorrectSession = new Set();
-      state.flaggedSession = new Set(getTopicReview(state.level, topicId).flagged);
+      state.flaggedSession = isMixed ? new Set() : new Set(getTopicReview(state.level, topicId).flagged);
 
-      const prepared = buildQuestionSet(state.level, topicId, mode);
+      const questionLimit = mode === 'normal' ? getDesiredQuestionCount() : null;
+
+      const prepared = buildQuestionSet(state.level, topicId, mode, questionLimit);
 
       if (!prepared.length) {
         if (mode === 'incorrect') {
@@ -769,6 +808,19 @@
       startQuiz(state.topic, mode);
     }
 
+    function startMixedQuiz() {
+      startQuiz('__mixed', 'normal');
+    }
+
+    function getDesiredQuestionCount() {
+      const input = document.getElementById('questionCountInput');
+      const raw = input.value.trim();
+      if (!raw) return null;
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed) || parsed < 1) return null;
+      return Math.floor(parsed);
+    }
+
     function shuffleArray(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -787,11 +839,15 @@
       return '';
     }
 
-    function buildQuestionSet(level, topicId, mode = 'normal') {
-      const rawQuestions = questionBank[level][topicId] || [];
-      const review = getTopicReview(level, topicId);
+    function buildQuestionSet(level, topicId, mode = 'normal', limit = null) {
+      const isMixed = topicId === '__mixed';
+      const topicIds = isMixed ? topics.map(t => t.id) : [topicId];
+      const review = isMixed ? { incorrect: [], flagged: [] } : getTopicReview(level, topicId);
 
-      let selectedQuestions = rawQuestions.map((q, idx) => ({ ...q, __id: buildQuestionId(level, topicId, idx, q.q) }));
+      let selectedQuestions = topicIds.flatMap(id => {
+        const rawQuestions = questionBank[level][id] || [];
+        return rawQuestions.map((q, idx) => ({ ...q, __id: buildQuestionId(level, id, idx, q.q) }));
+      });
 
       if (mode === 'incorrect') {
         selectedQuestions = selectedQuestions.filter(q => review.incorrect.includes(q.__id));
@@ -800,7 +856,8 @@
       }
 
       const shuffledQuestions = shuffleArray(selectedQuestions.slice());
-      return shuffledQuestions.map(prepareQuestionForSession);
+      const trimmed = limit ? shuffledQuestions.slice(0, Math.min(limit, shuffledQuestions.length)) : shuffledQuestions;
+      return trimmed.map(prepareQuestionForSession);
     }
 
     function prepareQuestionForSession(rawQuestion) {
@@ -840,7 +897,9 @@
 
     function renderQuestion() {
       const current = state.questionSet[state.index];
-      const topicTitle = topics.find(t => t.id === state.topic).title;
+      const topicTitle = state.topic === '__mixed'
+        ? 'Mixed Topics'
+        : topics.find(t => t.id === state.topic).title;
       const modeLabel = getModeLabel();
 
       document.getElementById('quizPathLabel').textContent = modeLabel ? `${topicTitle} • ${modeLabel}` : topicTitle;
@@ -920,11 +979,11 @@
           state.progress.records.bestStreak = state.streak;
           saveProgress();
         }
-        removeFromReviewList('incorrect', current.id);
+        if (state.topic !== '__mixed') removeFromReviewList('incorrect', current.id);
       } else {
         state.streak = 0;
         state.incorrectSession.add(current.id);
-        addToReviewList('incorrect', current.id);
+        if (state.topic !== '__mixed') addToReviewList('incorrect', current.id);
       }
 
       renderQuestion();
@@ -948,10 +1007,10 @@
 
       if (state.flaggedSession.has(current.id)) {
         state.flaggedSession.delete(current.id);
-        removeFromReviewList('flagged', current.id);
+        if (state.topic !== '__mixed') removeFromReviewList('flagged', current.id);
       } else {
         state.flaggedSession.add(current.id);
-        addToReviewList('flagged', current.id);
+        if (state.topic !== '__mixed') addToReviewList('flagged', current.id);
       }
 
       renderFlagButton(current.id);
@@ -969,11 +1028,14 @@
       const total = state.questionSet.length;
       const percent = Math.round((state.score / total) * 100);
 
-      updateTopicMastery(state.level, state.topic, state.score, total, percent);
-      syncReviewStateForTopic();
+      const isMixed = state.topic === '__mixed';
+      if (!isMixed) {
+        updateTopicMastery(state.level, state.topic, state.score, total, percent);
+        syncReviewStateForTopic();
+      }
 
-      const mastery = getTopicMastery(state.level, state.topic);
-      const review = getTopicReview(state.level, state.topic);
+      const mastery = isMixed ? null : getTopicMastery(state.level, state.topic);
+      const review = isMixed ? { incorrect: 0, flagged: 0 } : getTopicReview(state.level, state.topic);
 
       let feedback = percent >= 80
         ? "Excellent. You have a solid grasp of this topic."
@@ -983,20 +1045,28 @@
         feedback = "Incorrect-question review complete. Recheck any remaining saved misses.";
       } else if (state.mode === 'flagged') {
         feedback = "Flagged-question review complete. Keep trimming that saved flagged list.";
+      } else if (isMixed) {
+        feedback = "Mixed-topic quiz complete. Use this mode for randomized practice across the entire phase.";
       }
 
       document.getElementById('summaryFeedback').textContent = feedback;
       document.getElementById('summaryPercent').textContent = percent + '%';
       document.getElementById('summaryCount').textContent = `${state.score} / ${total} Correct`;
 
-      document.getElementById('masterySummary').innerHTML = `
+      document.getElementById('masterySummary').innerHTML = isMixed
+        ? `<strong>Mixed Session</strong><br>Randomized from all topics in this phase.`
+        : `
         <strong>Topic Mastery</strong><br>
         Current mastery: <strong>${mastery.percent}%</strong><br>
         Best score: <strong>${mastery.bestPercent}%</strong><br>
         Attempts: <strong>${mastery.attempts}</strong>
       `;
 
-      document.getElementById('reviewSummary').innerHTML = `
+      document.getElementById('reviewSummary').innerHTML = isMixed ? `
+        <strong>Saved Review Pools</strong><br>
+        Mixed quizzes are not added to per-topic review pools.<br>
+        Best streak overall: <strong>${state.progress.records.bestStreak || 0}</strong>
+      ` : `
         <strong>Saved Review Pools</strong><br>
         Incorrect saved: <strong>${review.incorrect.length}</strong><br>
         Flagged saved: <strong>${review.flagged.length}</strong><br>
@@ -1006,11 +1076,11 @@
       const retryIncorrectBtn = document.getElementById('retryIncorrectBtn');
       const retryFlaggedBtn = document.getElementById('retryFlaggedBtn');
 
-      retryIncorrectBtn.disabled = review.incorrect.length === 0;
-      retryFlaggedBtn.disabled = review.flagged.length === 0;
+      retryIncorrectBtn.disabled = isMixed || review.incorrect.length === 0;
+      retryFlaggedBtn.disabled = isMixed || review.flagged.length === 0;
 
-      retryIncorrectBtn.style.opacity = review.incorrect.length === 0 ? '0.5' : '1';
-      retryFlaggedBtn.style.opacity = review.flagged.length === 0 ? '0.5' : '1';
+      retryIncorrectBtn.style.opacity = (isMixed || review.incorrect.length === 0) ? '0.5' : '1';
+      retryFlaggedBtn.style.opacity = (isMixed || review.flagged.length === 0) ? '0.5' : '1';
 
       saveProgress();
       showScreen('summaryScreen');
