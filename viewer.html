@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>App Viewer</title>
+  <style>
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:#f1f5f9; color:#0f172a; }
+    .wrap { max-width:600px; margin:0 auto; padding:20px; }
+    .back { display:inline-block; margin-bottom:16px; color:#475569; text-decoration:none; font-size:.9rem; }
+    .back:hover { color:#2563eb; }
+    .card { background:#fff; border:1px solid #dbe5f0; border-radius:16px; padding:28px 24px; }
+    h1 { margin:0 0 10px; font-size:1.5rem; }
+    .desc { color:#475569; margin:0 0 28px; line-height:1.5; font-size:.97rem; }
+    .actions { display:flex; gap:12px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border-radius:10px; font-size:1rem; font-weight:600; text-decoration:none; }
+    .btn-primary { background:#2563eb; color:#fff; }
+    .btn-primary:hover { background:#1d4ed8; }
+    .btn-secondary { background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; }
+    .btn-secondary:hover { background:#e2e8f0; }
+    .note { margin-top:20px; font-size:.85rem; color:#64748b; }
+    .error { color:#dc2626; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="back" href="./">&larr; Back to all apps</a>
+    <div class="card" id="content">
+      <p>Loading&hellip;</p>
+    </div>
+  </main>
+  <script>
+    const apps = {
+      ATLS_MCQs: {
+        title: "ATLS MCQs",
+        desc: "Advanced Trauma Life Support study questions — 50 trauma-focused MCQs across difficulty levels and topic filters."
+      },
+      ACLS_MCQs: {
+        title: "ACLS MCQ Framework",
+        desc: "Starter framework for Canadian-first Advanced Cardiac Life Support multiple-choice practice topics."
+      },
+      ACTT_MCQs: {
+        title: "ACTT MCQs",
+        desc: "Tactical and transport-focused question trainer covering pre-hospital and tactical medical scenarios."
+      }
+    };
+
+    const params = new URLSearchParams(location.search);
+    const appId = params.get("app");
+    const app = apps[appId];
+    const content = document.getElementById("content");
+
+    if (!app) {
+      content.innerHTML = '<p class="error">App not found. <a href="./">Return to the app list</a>.</p>';
+    } else {
+      document.title = app.title + " — Viewer";
+      content.innerHTML =
+        "<h1>" + app.title + "</h1>" +
+        '<p class="desc">' + app.desc + "</p>" +
+        '<div class="actions">' +
+          '<a class="btn btn-primary" href="' + appId + '">Open App</a>' +
+          '<a class="btn btn-secondary" href="' + appId + '" download="' + appId + '.html">Download for Offline Use</a>' +
+        "</div>" +
+        '<p class="note">The downloaded file is fully self-contained — no internet connection required to use it.</p>';
+    }
+  </script>
+</body>
+</html>
