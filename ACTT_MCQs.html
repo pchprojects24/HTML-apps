@@ -1072,4 +1072,15 @@
         review.incorrect = review.incorrect.filter(id => !correctedThisRound.includes(id));
       }
 
-      if (state.mode
+      if (state.mode === 'flagged') {
+        const unflaggedThisRound = state.questionSet
+          .filter(q => !state.flaggedSession.has(q.id))
+          .map(q => q.id);
+        review.flagged = review.flagged.filter(id => !unflaggedThisRound.includes(id));
+      }
+
+      saveProgress();
+    }
+  </script>
+</body>
+</html>
