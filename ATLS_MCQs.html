@@ -166,18 +166,96 @@ button, input { font: inherit; }
 @media (hover:hover) {
   .btn:hover, .tab:hover, .chip:hover, .q-link:hover, .opt:hover { filter: brightness(1.08); }
 }
+/* Landing page */
+.level-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin: 14px 0;
+}
+.level-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  transition: filter .15s;
+}
+.level-card:hover { filter: brightness(1.12); }
+.lv-icon { font-size: 2rem; line-height: 1; }
+.lv-name { font-size: 1.3rem; font-weight: 700; margin-top: 4px; }
+.lv-desc { color: var(--muted); font-size: .9rem; line-height: 1.5; flex: 1; }
+.lv-progress { font-size: .82rem; color: var(--accent-2); min-height: 1.2em; }
+.lv-enter { margin-top: 6px; font-size: .95rem; font-weight: 700; color: var(--accent); }
+.level-card.beginner { border-color: rgba(34,197,94,.3); }
+.level-card.beginner .lv-name { color: #4ade80; }
+.level-card.intermediate { border-color: rgba(251,191,36,.3); }
+.level-card.intermediate .lv-name { color: #fbbf24; }
+.level-card.advanced { border-color: rgba(239,68,68,.3); }
+.level-card.advanced .lv-name { color: #f87171; }
+/* Level hub nav */
+.level-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.level-badge {
+  font-size: .8rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; background: rgba(96,165,250,.12);
+  border: 1px solid rgba(96,165,250,.3); color: var(--accent);
+}
 </style>
 </head>
 <body>
 <div class="app">
-  <section id="homeView">
+  <section id="landingView">
     <div class="hero">
       <h1>ATLS 2025 MCQ Trainer</h1>
-      <div class="sub">Question list on one page, individual MCQs on a separate page view. No sticky header on question pages.</div>
-      <div class="note">Current public standard: ATLS 11 (2025 release). Educational tool only; use local Canadian trauma protocols where applicable.</div>
+      <div class="sub">Advanced Trauma Life Support — choose your level to begin practising.</div>
+      <div class="note">ATLS 11 (2025 release). Educational tool only; apply local Canadian trauma protocols where relevant.</div>
     </div>
 
-    <div class="tabs" id="tabs"></div>
+    <div class="level-grid">
+      <button class="level-card beginner" id="enterBeginner">
+        <div class="lv-icon">🟢</div>
+        <div class="lv-name">Beginner</div>
+        <div class="lv-desc">Core trauma management decisions — foundational ATLS principles and priorities.</div>
+        <div class="lv-progress" id="lpBeginner"></div>
+        <div class="lv-enter">Enter →</div>
+      </button>
+      <button class="level-card intermediate" id="enterIntermediate">
+        <div class="lv-icon">🟡</div>
+        <div class="lv-name">Intermediate</div>
+        <div class="lv-desc">Contextual primary survey scenarios — applying ATLS decisions in realistic clinical contexts.</div>
+        <div class="lv-progress" id="lpIntermediate"></div>
+        <div class="lv-enter">Enter →</div>
+      </button>
+      <button class="level-card advanced" id="enterAdvanced">
+        <div class="lv-icon">🔴</div>
+        <div class="lv-name">Advanced</div>
+        <div class="lv-desc">High-acuity and resource-limited scenarios — complex management with competing priorities.</div>
+        <div class="lv-progress" id="lpAdvanced"></div>
+        <div class="lv-enter">Enter →</div>
+      </button>
+    </div>
+
+    <div class="footer">
+      Educational tool only. ATLS teaching is ultimately governed by your local course materials, institutional protocols, and current transfer resources.
+    </div>
+  </section>
+
+  <section id="homeView" class="hidden">
+    <div class="hero">
+      <div class="level-nav">
+        <button class="btn" id="backToLandingBtn">← All Levels</button>
+        <span class="level-badge" id="levelBadge">Beginner</span>
+      </div>
+      <h1>ATLS 2025 MCQ Trainer</h1>
+      <div class="sub">Select a topic or search to filter questions. Progress is saved automatically.</div>
+      <div class="note">ATLS 11 (2025 release). Educational tool only; apply local Canadian trauma protocols where relevant.</div>
+    </div>
 
     <section class="stats">
       <div class="stat"><div class="k" id="scoreK">0%</div><div class="l">Current score</div></div>
@@ -313,24 +391,33 @@ function statsForMode(mode) {
   return { answered, correct, percent, flagged, total: items.length };
 }
 
-function renderTabs() {
-  const el = document.getElementById("tabs");
-  el.innerHTML = "";
-  Object.entries(sectionModes).forEach(([key, meta]) => {
-    const b = document.createElement("button");
-    b.className = "tab" + (state.mode === key ? " active" : "");
-    b.textContent = `${meta.label} (50)`;
-    b.onclick = () => {
-      state.mode = key;
-      state.topic = "All topics";
-      state.reviewOnly = false;
-      state.currentQid = null;
-      persist();
-      showHome();
-      renderHome();
-    };
-    el.appendChild(b);
+function showLanding() {
+  document.getElementById("landingView").classList.remove("hidden");
+  document.getElementById("homeView").classList.add("hidden");
+  document.getElementById("quizView").classList.add("hidden");
+  renderLanding();
+}
+
+function renderLanding() {
+  const map = { beginner: "lpBeginner", intermediate: "lpIntermediate", advanced: "lpAdvanced" };
+  Object.entries(map).forEach(([key, elId]) => {
+    const st = statsForMode(key);
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = st.answered
+      ? `${st.answered} / ${st.total} answered · ${st.percent}% correct`
+      : `${st.total} questions`;
   });
+}
+
+function selectLevel(key) {
+  state.mode = key;
+  state.topic = "All topics";
+  state.reviewOnly = false;
+  state.currentQid = null;
+  persist();
+  showHome();
+  renderHome();
 }
 
 function renderChips() {
@@ -482,6 +569,7 @@ function nextUnanswered() {
 }
 
 function showHome() {
+  document.getElementById("landingView").classList.add("hidden");
   document.getElementById("homeView").classList.remove("hidden");
   document.getElementById("quizView").classList.add("hidden");
 }
@@ -493,7 +581,7 @@ function showQuiz() {
 
 function renderHome() {
   state.search = document.getElementById("search").value || "";
-  renderTabs();
+  document.getElementById("levelBadge").textContent = sectionModes[state.mode].label;
   renderChips();
   renderStats();
   renderQuestionList();
@@ -533,7 +621,16 @@ document.getElementById("flagBtn").addEventListener("click", () => {
   renderQuiz();
 });
 
-renderHome();
+document.getElementById("enterBeginner").addEventListener("click", () => selectLevel("beginner"));
+document.getElementById("enterIntermediate").addEventListener("click", () => selectLevel("intermediate"));
+document.getElementById("enterAdvanced").addEventListener("click", () => selectLevel("advanced"));
+
+document.getElementById("backToLandingBtn").addEventListener("click", () => {
+  showLanding();
+  window.scrollTo(0, 0);
+});
+
+showLanding();
 </script>
 </body>
 </html>
