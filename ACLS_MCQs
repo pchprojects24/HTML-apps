@@ -85,11 +85,21 @@
     ];
 
     const topics = [...new Set(QUESTIONS.map(q => q.topic))];
+    const safeParse = (value, fallback) => {
+      if (value == null) return fallback;
+      try {
+        const parsed = JSON.parse(value);
+        return parsed == null ? fallback : parsed;
+      } catch {
+        return fallback;
+      }
+    };
     const state = {
       topic: topics[0],
       current: 0,
-      answers: JSON.parse(localStorage.getItem("acls_answers") || "{}"),
-      flagged: JSON.parse(localStorage.getItem("acls_flagged") || "[]")
+      reviewFlagged: false,
+      answers: safeParse(localStorage.getItem("acls_answers"), {}),
+      flagged: safeParse(localStorage.getItem("acls_flagged"), [])
     };
 
     const tabs = document.getElementById("tabs");
@@ -107,6 +117,7 @@
     }
 
     function filtered() {
+      if (state.reviewFlagged) return QUESTIONS.filter(q => state.flagged.includes(q.id));
       return QUESTIONS.filter(q => q.topic === state.topic);
     }
 
@@ -125,7 +136,7 @@
         const b = document.createElement("button");
         b.className = "tab" + (topic === state.topic ? " active" : "");
         b.textContent = topic;
-        b.onclick = () => { state.topic = topic; renderTabs(); renderList(); refreshStats(); };
+        b.onclick = () => { state.topic = topic; state.reviewFlagged = false; renderTabs(); renderList(); refreshStats(); };
         tabs.appendChild(b);
       });
     }
@@ -185,9 +196,19 @@
       const q = filtered()[state.current];
       if (state.flagged.includes(q.id)) state.flagged = state.flagged.filter(id => id !== q.id);
       else state.flagged.push(q.id);
+      const list = filtered();
+      if (!list.length) {
+        state.reviewFlagged = false;
+        state.current = 0;
+        quizView.style.display = "none";
+        homeView.style.display = "block";
+      } else if (state.current > list.length - 1) {
+        state.current = list.length - 1;
+      }
       saveState();
       refreshStats();
       renderList();
+      if (quizView.style.display === "block") renderQuestion();
     };
     document.getElementById("resetBtn").onclick = () => {
       if (!confirm("Reset all ACLS progress?")) return;
@@ -198,9 +219,8 @@
       refreshStats();
     };
     document.getElementById("flagBtn").onclick = () => {
-      const flaggedOnly = QUESTIONS.filter(q => state.flagged.includes(q.id));
-      if (!flaggedOnly.length) return alert("No flagged questions yet.");
-      state.topic = flaggedOnly[0].topic;
+      if (!state.flagged.length) return alert("No flagged questions yet.");
+      state.reviewFlagged = true;
       renderTabs(); renderList(); refreshStats();
     };
 
