@@ -92,7 +92,7 @@
       transform: scale(0.98);
     }
 
-    .card-btn:hover, .option-btn:hover:not(:disabled), .ghost-btn:hover {
+    .card-btn:hover, .option-btn:hover:not(:disabled), .ghost-btn:hover:not(:disabled) {
       border-color: var(--primary);
       background: #f0f7ff;
     }
@@ -294,7 +294,7 @@
       text-align: center;
     }
 
-    .primary-btn:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+    .primary-btn:hover:not(:disabled) { background: var(--primary-dark); border-color: var(--primary-dark); }
 
     .summary-card {
       padding: 24px;
