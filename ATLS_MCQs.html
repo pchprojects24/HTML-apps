@@ -560,9 +560,11 @@ function moveQuestion(step) {
 
 function nextUnanswered() {
   const items = filteredSet();
+  if (!items.length) return;
   const idx = items.findIndex(q => q.qid === state.currentQid);
-  const after = items.slice(idx + 1).find(q => !state.answers[q.qid]);
-  const before = items.slice(0, idx + 1).find(q => !state.answers[q.qid]);
+  const start = idx === -1 ? 0 : idx + 1;
+  const after = items.slice(start).find(q => !state.answers[q.qid]);
+  const before = idx > 0 ? items.slice(0, idx).find(q => !state.answers[q.qid]) : undefined;
   const target = after || before;
   if (target) openQuestion(target.qid);
   else alert("No unanswered questions in the current filter.");

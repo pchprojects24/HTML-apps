@@ -274,6 +274,8 @@
       if (!confirm("Reset all ACLS progress?")) return;
       state.answers = {};
       state.flagged = [];
+      state.reviewFlagged = false;
+      state.current = 0;
       saveState();
       renderList();
       refreshStats();
