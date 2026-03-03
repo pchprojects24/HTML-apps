@@ -35,6 +35,17 @@
     .good { border-color:rgba(34,197,94,.4); }
     .bad { border-color:rgba(239,68,68,.4); }
     .footer { margin-top:12px; font-size:.84rem; color:var(--muted); line-height:1.5; }
+    .mode-toggle { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 6px; }
+    .topic-grid { display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+    .topic-card { text-align:left; padding:10px 12px; background:var(--panel); border:1px solid var(--border); border-radius:12px; cursor:pointer; }
+    .topic-card.active { background:linear-gradient(135deg,rgba(96,165,250,.25),rgba(34,211,238,.18)); border-color:rgba(96,165,250,.5); }
+    .topic-meta { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:.9rem; margin-top:4px; }
+    .topic-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--panel); border:1px solid var(--border); border-radius:12px; }
+    .topic-row label { display:flex; align-items:center; gap:8px; }
+    .counts { margin-top:10px; display:grid; gap:8px; }
+    .counts .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .counts select { padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:var(--panel); color:var(--text); }
+    .hint { color:var(--muted); font-size:.9rem; margin:6px 0 0; }
   </style>
 </head>
 <body>
@@ -46,7 +57,19 @@
         <p class="sub">Guideline intent: Canada-first (Heart &amp; Stroke Foundation ACLS context), cross-checked with international consensus themes (ILCOR/AHA/ERC). Always verify your local protocol updates.</p>
       </div>
 
-      <div class="tabs" id="tabs"></div>
+      <div class="card list" id="configCard">
+        <div class="mode-toggle">
+          <button class="tab active" id="singleModeBtn">Single topic</button>
+          <button class="tab" id="multiModeBtn">Multiple topics</button>
+        </div>
+        <p class="muted" id="configHint">Choose one topic to get started.</p>
+        <div id="topicList" class="topic-grid"></div>
+        <div id="countControls" class="counts"></div>
+        <div class="actions">
+          <button class="btn" id="startBtn">Start quiz</button>
+        </div>
+      </div>
+
       <div class="stats">
         <div class="stat"><div class="k" id="scoreK">0%</div><div class="muted">Score</div></div>
         <div class="stat"><div class="k" id="doneK">0 / 0</div><div class="muted">Answered</div></div>
@@ -155,6 +178,10 @@
     ];
 
     const topics = [...new Set(QUESTIONS.map(q => q.topic))];
+    const topicCounts = topics.reduce((acc, topic) => {
+      acc[topic] = QUESTIONS.filter(q => q.topic === topic).length;
+      return acc;
+    }, {});
     const safeParse = (value, fallback) => {
       if (value == null) return fallback;
       try {
@@ -164,16 +191,33 @@
         return fallback;
       }
     };
+    const defaultTopic = topics[0];
 
     const state = {
-      topic: topics[0],
+      mode: "single",
+      selectedTopics: [defaultTopic],
+      singleCount: Math.min(5, topicCounts[defaultTopic]),
+      multiDistribution: "even",
+      evenCount: Math.min(5, topicCounts[defaultTopic]),
+      perTopicCounts: topics.reduce((acc, topic) => {
+        acc[topic] = Math.min(5, topicCounts[topic]);
+        return acc;
+      }, {}),
+      activeQuestions: [],
       current: 0,
       reviewFlagged: false,
       answers: safeParse(localStorage.getItem("acls_answers"), {}),
       flagged: safeParse(localStorage.getItem("acls_flagged"), [])
     };
 
-    const tabs = document.getElementById("tabs");
+    const modeButtons = {
+      single: document.getElementById("singleModeBtn"),
+      multi: document.getElementById("multiModeBtn")
+    };
+    const topicListEl = document.getElementById("topicList");
+    const countControls = document.getElementById("countControls");
+    const startBtn = document.getElementById("startBtn");
+    const configHint = document.getElementById("configHint");
     const questionList = document.getElementById("questionList");
     const homeView = document.getElementById("homeView");
     const quizView = document.getElementById("quizView");
@@ -187,41 +231,193 @@
       localStorage.setItem("acls_flagged", JSON.stringify(state.flagged));
     }
 
+    function shuffle(list) {
+      const arr = [...list];
+      for (let i = arr.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function countOptions(max) {
+      if (max <= 0) return [0];
+      const opts = [];
+      for (let i = 5; i <= max; i += 5) opts.push(i);
+      if (!opts.length || opts[opts.length - 1] !== max) opts.push(max);
+      return [...new Set(opts)].sort((a, b) => a - b);
+    }
+
+    function ensureSelection() {
+      if (!state.selectedTopics.length) state.selectedTopics = [defaultTopic];
+    }
+
     function filtered() {
-      if (state.reviewFlagged) return QUESTIONS.filter(q => state.flagged.includes(q.id));
-      return QUESTIONS.filter(q => q.topic === state.topic);
+      const base = state.activeQuestions;
+      if (!base.length) return [];
+      if (state.reviewFlagged) return base.filter(q => state.flagged.includes(q.id));
+      return base;
     }
 
     function refreshStats() {
-      const list = filtered();
-      const done = list.filter(q => state.answers[q.id] !== undefined).length;
-      const correct = list.filter(q => state.answers[q.id] === q.answer).length;
-      scoreK.textContent = done ? Math.round((correct / done) * 100) + "%" : "0%";
-      doneK.textContent = `${done} / ${list.length}`;
-      flagK.textContent = state.flagged.length;
+      const total = state.activeQuestions.length;
+      const done = state.activeQuestions.filter(q => state.answers[q.id] !== undefined).length;
+      const correct = state.activeQuestions.filter(q => state.answers[q.id] === q.answer).length;
+      scoreK.textContent = done && total ? Math.round((correct / done) * 100) + "%" : "0%";
+      doneK.textContent = `${done} / ${total}`;
+      const flaggedInSet = state.activeQuestions.filter(q => state.flagged.includes(q.id)).length;
+      flagK.textContent = flaggedInSet;
     }
 
-    function renderTabs() {
-      tabs.innerHTML = "";
-      topics.forEach(topic => {
-        const count = QUESTIONS.filter(q => q.topic === topic).length;
-        const b = document.createElement("button");
-        b.className = "tab" + (topic === state.topic ? " active" : "");
-        b.textContent = `${topic} (${count})`;
-        b.onclick = () => {
-          state.topic = topic;
-          state.reviewFlagged = false;
-          renderTabs();
-          renderList();
-          refreshStats();
+    function renderMode() {
+      modeButtons.single.className = "tab" + (state.mode === "single" ? " active" : "");
+      modeButtons.multi.className = "tab" + (state.mode === "multi" ? " active" : "");
+      configHint.textContent = state.mode === "single"
+        ? "Pick one topic and set how many questions you want."
+        : "Pick multiple topics, adjust counts, then build a shuffled mix.";
+    }
+
+    function renderTopics() {
+      ensureSelection();
+      if (state.mode === "single") {
+        topicListEl.innerHTML = topics.map(topic => `
+          <button class="topic-card ${state.selectedTopics[0] === topic ? "active" : ""}" data-topic="${topic}">
+            <div><strong>${topic}</strong></div>
+            <div class="topic-meta"><span>${topicCounts[topic]} questions</span></div>
+          </button>
+        `).join("");
+        topicListEl.querySelectorAll(".topic-card").forEach(btn => {
+          btn.onclick = () => {
+            state.selectedTopics = [btn.dataset.topic];
+            const max = topicCounts[btn.dataset.topic];
+            if (state.singleCount > max) state.singleCount = max;
+            renderTopics();
+            renderCountControls();
+          };
+        });
+        return;
+      }
+
+      const selected = new Set(state.selectedTopics);
+      topicListEl.innerHTML = topics.map(topic => `
+        <div class="topic-row">
+          <label><input type="checkbox" data-topic="${topic}" ${selected.has(topic) ? "checked" : ""}/> ${topic}</label>
+          <span class="muted">${topicCounts[topic]} questions</span>
+        </div>
+      `).join("");
+
+      topicListEl.querySelectorAll("input[type='checkbox']").forEach(input => {
+        input.onchange = () => {
+          const topic = input.dataset.topic;
+          const next = new Set(state.selectedTopics);
+          if (input.checked) {
+            next.add(topic);
+          } else {
+            next.delete(topic);
+          }
+          state.selectedTopics = next.size ? [...next] : [defaultTopic];
+          renderTopics();
+          renderCountControls();
         };
-        tabs.appendChild(b);
+      });
+    }
+
+    function renderCountControls() {
+      ensureSelection();
+      if (state.mode === "single") {
+        const topic = state.selectedTopics[0] || defaultTopic;
+        const max = topicCounts[topic] || 0;
+        const opts = countOptions(max);
+        if (!opts.includes(state.singleCount)) state.singleCount = opts[opts.length - 1] || 0;
+
+        countControls.innerHTML = `
+          <div class="row"><strong>${topic}</strong><span class="muted">${max} questions available</span></div>
+          <div class="row">
+            <label for="singleCount">Questions for this topic</label>
+            <select id="singleCount">${opts.map(o => `<option value="${o}" ${o === state.singleCount ? "selected" : ""}>${o}</option>`).join("")}</select>
+          </div>
+          <p class="hint">Select how many questions (by fives up to the topic maximum).</p>
+        `;
+        const singleSelect = document.getElementById("singleCount");
+        if (singleSelect) singleSelect.onchange = e => state.singleCount = Number(e.target.value);
+        return;
+      }
+
+      if (!state.selectedTopics.length) {
+        countControls.innerHTML = `<p class="hint">Select at least one topic to configure question counts.</p>`;
+        return;
+      }
+
+      const selected = state.selectedTopics;
+      const minAvailable = Math.min(...selected.map(t => topicCounts[t]));
+      const evenOpts = countOptions(minAvailable);
+      if (!evenOpts.includes(state.evenCount)) state.evenCount = evenOpts[evenOpts.length - 1] || 0;
+
+      let html = `
+        <div class="row">
+          <label><input type="radio" name="distribution" value="even" ${state.multiDistribution === "even" ? "checked" : ""}/> Balanced (same per topic)</label>
+          <label><input type="radio" name="distribution" value="custom" ${state.multiDistribution === "custom" ? "checked" : ""}/> Custom per topic</label>
+        </div>
+      `;
+
+      if (state.multiDistribution === "even") {
+        html += `
+          <div class="row">
+            <label for="evenCount">Questions per topic</label>
+            <select id="evenCount">${evenOpts.map(o => `<option value="${o}" ${o === state.evenCount ? "selected" : ""}>${o}</option>`).join("")}</select>
+          </div>
+          <p class="hint">Balanced split uses the same number from each chosen topic.</p>
+        `;
+      } else {
+        html += selected.map(topic => {
+          const max = topicCounts[topic];
+          const opts = countOptions(max);
+          const current = Math.min(state.perTopicCounts[topic] || opts[opts.length - 1], max);
+          state.perTopicCounts[topic] = current;
+          return `
+            <div class="row">
+              <div style="flex:1;"><strong>${topic}</strong><div class="hint">${max} available</div></div>
+              <select data-topic="${topic}">${opts.map(o => `<option value="${o}" ${o === current ? "selected" : ""}>${o}</option>`).join("")}</select>
+            </div>
+          `;
+        }).join("") + `<p class="hint">Customize counts to weight topics differently.</p>`;
+      }
+
+      countControls.innerHTML = html;
+
+      countControls.querySelectorAll("input[name='distribution']").forEach(radio => {
+        radio.onchange = () => {
+          state.multiDistribution = radio.value;
+          renderCountControls();
+        };
+      });
+
+      const evenSelect = document.getElementById("evenCount");
+      if (evenSelect) evenSelect.onchange = e => state.evenCount = Number(e.target.value);
+
+      countControls.querySelectorAll("select[data-topic]").forEach(sel => {
+        sel.onchange = e => {
+          const topic = sel.dataset.topic;
+          state.perTopicCounts[topic] = Number(e.target.value);
+        };
       });
     }
 
     function renderList() {
+      const list = filtered();
       questionList.innerHTML = "";
-      filtered().forEach((q, idx) => {
+
+      if (!state.activeQuestions.length) {
+        questionList.innerHTML = `<p class="muted">Build a quiz with Single or Multiple topics to see questions here.</p>`;
+        return;
+      }
+
+      if (!list.length) {
+        questionList.innerHTML = `<p class="muted">No questions to review in this view yet.</p>`;
+        return;
+      }
+
+      list.forEach((q, idx) => {
         const b = document.createElement("button");
         const answered = state.answers[q.id] !== undefined;
         b.className = "q-link";
@@ -229,6 +425,43 @@
         b.onclick = () => openQuestion(idx);
         questionList.appendChild(b);
       });
+    }
+
+    function sampleQuestions(topic, desired) {
+      const pool = QUESTIONS.filter(q => q.topic === topic);
+      const take = Math.min(desired, pool.length);
+      return shuffle(pool).slice(0, take);
+    }
+
+    function startQuiz() {
+      ensureSelection();
+      const selected = [...new Set(state.selectedTopics)];
+      let pool = [];
+
+      if (state.mode === "single") {
+        pool = sampleQuestions(selected[0], state.singleCount);
+      } else {
+        selected.forEach(topic => {
+          const target = state.multiDistribution === "even" ? state.evenCount : state.perTopicCounts[topic] || 0;
+          if (target > 0) {
+            pool = pool.concat(sampleQuestions(topic, target));
+          }
+        });
+      }
+
+      if (!pool.length) {
+        alert("No questions available for that selection.");
+        return;
+      }
+
+      state.activeQuestions = shuffle(pool);
+      state.reviewFlagged = false;
+      state.current = 0;
+      renderList();
+      refreshStats();
+      homeView.style.display = "none";
+      quizView.style.display = "block";
+      renderQuestion();
     }
 
     function openQuestion(i) {
@@ -240,6 +473,12 @@
 
     function renderQuestion() {
       const list = filtered();
+      if (!list.length) {
+        quizContent.innerHTML = `<p class="muted">No questions loaded. Choose topics and start a quiz from the landing page.</p>`;
+        return;
+      }
+
+      if (state.current > list.length - 1) state.current = list.length - 1;
       const q = list[state.current];
       const chosen = state.answers[q.id];
       const done = chosen !== undefined;
@@ -270,9 +509,30 @@
       });
     }
 
+    modeButtons.single.onclick = () => {
+      state.mode = "single";
+      state.reviewFlagged = false;
+      state.selectedTopics = [state.selectedTopics[0] || defaultTopic];
+      renderMode();
+      renderTopics();
+      renderCountControls();
+    };
+
+    modeButtons.multi.onclick = () => {
+      state.mode = "multi";
+      state.reviewFlagged = false;
+      if (!state.selectedTopics.length) state.selectedTopics = [defaultTopic];
+      renderMode();
+      renderTopics();
+      renderCountControls();
+    };
+
+    startBtn.onclick = startQuiz;
+
     document.getElementById("backBtn").onclick = () => {
       quizView.style.display = "none";
       homeView.style.display = "block";
+      renderList();
     };
     document.getElementById("prevBtn").onclick = () => {
       if (state.current > 0) {
@@ -288,25 +548,25 @@
       }
     };
     document.getElementById("toggleFlagBtn").onclick = () => {
-      const q = filtered()[state.current];
+      const list = filtered();
+      if (!list.length) return;
+      const q = list[state.current];
       if (state.flagged.includes(q.id)) {
         state.flagged = state.flagged.filter(id => id !== q.id);
       } else {
         state.flagged.push(q.id);
       }
-      const list = filtered();
-      if (!list.length) {
+      const flaggedInSet = state.activeQuestions.filter(item => state.flagged.includes(item.id));
+      if (state.reviewFlagged && !flaggedInSet.length) {
         state.reviewFlagged = false;
         state.current = 0;
-        quizView.style.display = "none";
-        homeView.style.display = "block";
-      } else if (state.current > list.length - 1) {
-        state.current = list.length - 1;
+      } else if (state.current > flaggedInSet.length - 1 && state.reviewFlagged) {
+        state.current = Math.max(0, flaggedInSet.length - 1);
       }
       saveState();
       refreshStats();
       renderList();
-      if (quizView.style.display === "block") renderQuestion();
+      renderQuestion();
     };
 
     document.getElementById("resetBtn").onclick = () => {
@@ -321,14 +581,23 @@
     };
 
     document.getElementById("flagBtn").onclick = () => {
-      if (!state.flagged.length) return alert("No flagged questions yet.");
+      if (!state.activeQuestions.length) return alert("Start a quiz first to review flagged questions.");
+      const flaggedInSet = state.activeQuestions.filter(q => state.flagged.includes(q.id));
+      if (!flaggedInSet.length) return alert("No flagged questions in this selection yet.");
       state.reviewFlagged = true;
-      renderTabs();
+      state.current = 0;
       renderList();
       refreshStats();
+      if (quizView.style.display === "block") renderQuestion();
     };
 
-    renderTabs();
+    function renderConfig() {
+      renderMode();
+      renderTopics();
+      renderCountControls();
+    }
+
+    renderConfig();
     renderList();
     refreshStats();
   </script>
