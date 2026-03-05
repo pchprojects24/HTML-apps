@@ -469,6 +469,7 @@ function groupByTopic(items) {
 function renderQuestionList() {
   const root = document.getElementById("questionList");
   const items = filteredSet();
+  const orderMap = new Map(items.map((q, idx) => [q.qid, idx + 1]));
   root.innerHTML = "";
   if (!items.length) {
     root.innerHTML = `<div class="muted">No questions match the current filters.</div>`;
@@ -484,7 +485,7 @@ function renderQuestionList() {
       const flag = state.flagged[q.qid] ? " • ★ Flagged" : "";
       const btn = document.createElement("button");
       btn.className = "q-link";
-      btn.innerHTML = `<span>Question ${q.id}</span><span class="meta">${status}${flag}</span>`;
+      btn.innerHTML = `<span>Question ${orderMap.get(q.qid)}</span><span class="meta">${status}${flag}</span>`;
       btn.onclick = () => openQuestion(q.qid);
       group.appendChild(btn);
     });
@@ -528,12 +529,15 @@ function renderQuiz() {
     root.innerHTML = `<div class="q-card">Question not available in the current filter. Go back to the list.</div>`;
     return;
   }
+  const items = filteredSet();
+  const questionIndex = items.findIndex(item => item.qid === q.qid);
+  const questionNumber = questionIndex + 1;
   const chosen = state.answers[q.qid];
   const isCorrect = chosen && chosen === q.answer;
   document.getElementById("flagBtn").textContent = state.flagged[q.qid] ? "★ Flagged" : "☆ Flag";
   root.innerHTML = `
     <article class="q-card">
-      <div class="q-num">Question ${q.id} • ${sectionModes[state.mode].label}</div>
+      <div class="q-num">Question ${questionNumber} of ${items.length} • ${sectionModes[state.mode].label}</div>
       <div class="topic-line">${q.topic}</div>
       <div class="stem-label">Stem:</div>
       <div class="stem">${q.stem}</div>
