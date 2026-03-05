@@ -253,7 +253,7 @@ button, input { font: inherit; }
         <span class="level-badge" id="levelBadge">Beginner</span>
       </div>
       <h1>ATLS 2025 MCQ Trainer</h1>
-      <div class="sub">Select a topic or search to filter questions. Progress is saved automatically.</div>
+      <div class="sub">Select one, many, or all topics, then generate a randomized quiz on the next page. Progress is saved automatically.</div>
       <div class="note">ATLS 11 (2025 release). Educational tool only; apply local Canadian trauma protocols where relevant.</div>
     </div>
 
@@ -264,17 +264,13 @@ button, input { font: inherit; }
     </section>
 
     <div class="card list-wrap">
-      <div class="toolbar" style="margin-bottom:12px;">
-        <div class="search card" style="flex:1 1 260px; box-shadow:none;">
-          <span>🔎</span>
-          <input id="search" type="search" placeholder="Search topic, concept, or keyword" />
-        </div>
-        <button class="btn" id="resetBtn">Reset progress</button>
-        <button class="btn" id="reviewBtn">Review flagged</button>
-      </div>
-
+      <h2 class="section-title">Topic selection</h2>
+      <div class="muted small" id="selectionSummary" style="margin-bottom:12px;"></div>
       <div class="chips" id="chips" style="margin-bottom:12px;"></div>
-      <div id="questionList"></div>
+      <div class="toolbar">
+        <button class="btn primary" id="createTestBtn">Create test</button>
+        <button class="btn" id="resetBtn">Reset progress</button>
+      </div>
     </div>
 
     <div class="footer">
@@ -285,7 +281,7 @@ button, input { font: inherit; }
   <section id="quizView" class="hidden">
     <div class="quiz-shell">
       <div class="quiz-top nav-row">
-        <button class="btn" id="backBtn">← Back to question list</button>
+        <button class="btn" id="backBtn">← Back to topic selection</button>
         <button class="btn" id="prevBtn">Previous</button>
         <button class="btn" id="nextBtn">Next</button>
         <button class="btn primary" id="nextUnansweredBtn">Next unanswered</button>
@@ -307,11 +303,17 @@ const sectionModes = {
 
 const stateKey = "atls_mcq_trainer_v3";
 const saved = JSON.parse(localStorage.getItem(stateKey) || "{}");
+function migrateTopicSelection(savedState) {
+  if (Array.isArray(savedState.selectedTopics)) return savedState.selectedTopics;
+  if (savedState.topic && savedState.topic !== "All topics") return [savedState.topic];
+  return [];
+}
+
+const savedSelectedTopics = migrateTopicSelection(saved);
 const state = {
   mode: saved.mode || "beginner",
-  topic: saved.topic || "All topics",
-  reviewOnly: false,
-  search: "",
+  selectedTopics: savedSelectedTopics,
+  generatedQids: Array.isArray(saved.generatedQids) ? saved.generatedQids : [],
   answers: saved.answers || {},
   flagged: saved.flagged || {},
   currentQid: saved.currentQid || null
@@ -320,7 +322,8 @@ const state = {
 function persist() {
   localStorage.setItem(stateKey, JSON.stringify({
     mode: state.mode,
-    topic: state.topic,
+    selectedTopics: state.selectedTopics,
+    generatedQids: state.generatedQids,
     answers: state.answers,
     flagged: state.flagged,
     currentQid: state.currentQid
@@ -366,20 +369,19 @@ function topics() {
 
 function answerLabel(idx) { return ["A","B","C","D"][idx]; }
 
-function filteredSet() {
+function selectedSet() {
   let items = fullSet(state.mode);
-  if (state.topic !== "All topics") items = items.filter(q => q.topic === state.topic);
-  if (state.search.trim()) {
-    const s = state.search.trim().toLowerCase();
-    items = items.filter(q =>
-      q.topic.toLowerCase().includes(s) ||
-      q.core.toLowerCase().includes(s) ||
-      q.options.some(o => o.toLowerCase().includes(s)) ||
-      q.teach.toLowerCase().includes(s)
-    );
+  if (state.selectedTopics.length) {
+    items = items.filter(q => state.selectedTopics.includes(q.topic));
   }
-  if (state.reviewOnly) items = items.filter(q => state.flagged[q.qid]);
   return items;
+}
+
+function filteredSet() {
+  const items = selectedSet();
+  if (!state.generatedQids.length) return items;
+  const map = new Map(items.map(q => [q.qid, q]));
+  return state.generatedQids.map(qid => map.get(qid)).filter(Boolean);
 }
 
 function statsForMode(mode) {
@@ -412,8 +414,8 @@ function renderLanding() {
 
 function selectLevel(key) {
   state.mode = key;
-  state.topic = "All topics";
-  state.reviewOnly = false;
+  state.selectedTopics = [];
+  state.generatedQids = [];
   state.currentQid = null;
   persist();
   showHome();
@@ -423,12 +425,25 @@ function selectLevel(key) {
 function renderChips() {
   const el = document.getElementById("chips");
   el.innerHTML = "";
+  const allBtn = document.createElement("button");
+  allBtn.className = "chip" + (!state.selectedTopics.length ? " active" : "");
+  allBtn.textContent = "All topics";
+  allBtn.onclick = () => {
+    state.selectedTopics = [];
+    renderHome();
+  };
+  el.appendChild(allBtn);
   topics().forEach(t => {
+    if (t === "All topics") return;
     const b = document.createElement("button");
-    b.className = "chip" + (state.topic === t ? " active" : "");
+    b.className = "chip" + (state.selectedTopics.includes(t) ? " active" : "");
     b.textContent = t;
     b.onclick = () => {
-      state.topic = t;
+      if (state.selectedTopics.includes(t)) {
+        state.selectedTopics = state.selectedTopics.filter(topic => topic !== t);
+      } else {
+        state.selectedTopics = [...state.selectedTopics, t];
+      }
       renderHome();
     };
     el.appendChild(b);
@@ -440,7 +455,6 @@ function renderStats() {
   document.getElementById("scoreK").textContent = `${st.percent}%`;
   document.getElementById("doneK").textContent = `${st.answered} / ${st.total}`;
   document.getElementById("flagK").textContent = st.flagged;
-  document.getElementById("reviewBtn").classList.toggle("active", state.reviewOnly);
 }
 
 function groupByTopic(items) {
@@ -582,29 +596,52 @@ function showQuiz() {
 }
 
 function renderHome() {
-  state.search = document.getElementById("search").value || "";
   document.getElementById("levelBadge").textContent = sectionModes[state.mode].label;
+  const selectedCount = state.selectedTopics.length;
+  const summary = selectedCount
+    ? `${selectedCount} topic${selectedCount === 1 ? "" : "s"} selected`
+    : "All topics selected";
+  document.getElementById("selectionSummary").textContent = summary;
   renderChips();
   renderStats();
-  renderQuestionList();
   persist();
 }
 
-document.getElementById("search").addEventListener("input", renderHome);
+function shuffleQuestions(items) {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function createTest() {
+  const items = selectedSet();
+  if (!items.length) {
+    alert("Please select at least one topic to create a test.");
+    return;
+  }
+  const shuffled = shuffleQuestions(items);
+  state.generatedQids = shuffled.map(q => q.qid);
+  state.currentQid = state.generatedQids[0] || null;
+  persist();
+  showQuiz();
+  renderQuiz();
+  window.scrollTo(0, 0);
+}
 
 document.getElementById("resetBtn").addEventListener("click", () => {
   if (!confirm("Reset all saved answers and flags?")) return;
   state.answers = {};
   state.flagged = {};
+  state.generatedQids = [];
   state.currentQid = null;
   persist();
   renderHome();
 });
 
-document.getElementById("reviewBtn").addEventListener("click", () => {
-  state.reviewOnly = !state.reviewOnly;
-  renderHome();
-});
+document.getElementById("createTestBtn").addEventListener("click", createTest);
 
 document.getElementById("backBtn").addEventListener("click", () => {
   showHome();
