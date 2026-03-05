@@ -485,7 +485,7 @@ function renderQuestionList() {
       const flag = state.flagged[q.qid] ? " • ★ Flagged" : "";
       const btn = document.createElement("button");
       btn.className = "q-link";
-      btn.innerHTML = `<span>Question ${orderMap.get(q.qid) || q.id}</span><span class="meta">${status}${flag}</span>`;
+      btn.innerHTML = `<span>Question ${orderMap.get(q.qid)}</span><span class="meta">${status}${flag}</span>`;
       btn.onclick = () => openQuestion(q.qid);
       group.appendChild(btn);
     });
@@ -531,7 +531,7 @@ function renderQuiz() {
   }
   const items = filteredSet();
   const questionIndex = items.findIndex(item => item.qid === q.qid);
-  const questionNumber = questionIndex === -1 ? q.id : questionIndex + 1;
+  const questionNumber = questionIndex + 1;
   const chosen = state.answers[q.qid];
   const isCorrect = chosen && chosen === q.answer;
   document.getElementById("flagBtn").textContent = state.flagged[q.qid] ? "★ Flagged" : "☆ Flag";
